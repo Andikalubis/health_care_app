@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
               Text(
-                'Selamat Datang, Bapak/Ibu',
+                'Selamat Datang',
                 style: theme.textTheme.displayLarge,
               ),
               const SizedBox(height: 8),

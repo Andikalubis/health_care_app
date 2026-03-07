@@ -256,7 +256,6 @@ class DashboardScreen extends StatelessWidget {
       currentIndex: 0,
       selectedItemColor: theme.colorScheme.primary,
       unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.4),
-      showSecondaryAnimations: true,
       type: BottomNavigationBarType.fixed,
       iconSize: 32,
       selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
