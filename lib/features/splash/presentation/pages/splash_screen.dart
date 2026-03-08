@@ -19,23 +19,22 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLoginStatus() async {
-    // Delay for 2 seconds to show the splash screen
     await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('access_token');
 
+    if (!mounted) return;
+
     if (accessToken != null && accessToken.isNotEmpty) {
-      // User is already logged in, navigate to Dashboard
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
       );
     } else {
-      // Not logged in, navigate to Login
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }
   }
