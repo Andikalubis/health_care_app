@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   static const Color primaryColor = Color(0xFF1976D2); // Modern Blue
   static const Color accentColor = Color(0xFF03A9F4); // Light Blue
-  static const Color lightBackground = Color(0xFFF8FAFC); // Very light grey/white
+  static const Color lightBackground = Color(
+    0xFFF8FAFC,
+  ); // Very light grey/white
   static const Color darkBackground = Color(0xFF0F172A); // Deep Slate
   static const Color errorColor = Color(0xFFD32F2F); // Red
 
@@ -58,13 +60,10 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: onSurface,
         ),
-        bodyLarge: GoogleFonts.outfit(
-          fontSize: 20,
-          color: onSurface,
-        ),
+        bodyLarge: GoogleFonts.outfit(fontSize: 20, color: onSurface),
         bodyMedium: GoogleFonts.outfit(
           fontSize: 18,
-          color: onSurface.withOpacity(0.7),
+          color: onSurface.withValues(alpha: 0.7),
         ),
         labelLarge: GoogleFonts.outfit(
           fontSize: 20,
@@ -81,14 +80,23 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: onSurface.withOpacity(0.2), width: 1.5),
+          borderSide: BorderSide(
+            color: onSurface.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: primary, width: 2.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        hintStyle: TextStyle(fontSize: 18, color: onSurface.withOpacity(0.5)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 20,
+        ),
+        hintStyle: TextStyle(
+          fontSize: 18,
+          color: onSurface.withValues(alpha: 0.5),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -98,10 +106,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
       ),
     );

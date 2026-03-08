@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/home/presentation/pages/dashboard_screen.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:health_care_app/features/auth/data/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,7 +12,54 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _apiService = ApiService();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
+
+  void _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email dan kata sandi harus diisi')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _apiService.login(email, password);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Selamat datang, ${response.user.name}!')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -57,6 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 style: const TextStyle(fontSize: 20),
+                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   hintText: 'Contoh: budi@email.com',
                   prefixIcon: Icon(Icons.person_outline),
@@ -91,22 +139,24 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const DashboardScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Masuk Sekarang'),
+                onPressed: _isLoading ? null : _handleLogin,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Masuk Sekarang'),
               ),
               const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
                     child: Divider(
-                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
                     ),
                   ),
                   Padding(
@@ -115,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   Expanded(
                     child: Divider(
-                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
                     ),
                   ),
                 ],
