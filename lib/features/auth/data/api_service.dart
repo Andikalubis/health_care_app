@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/models/auth_response.dart';
+import 'package:health_care_app/features/auth/data/token_interceptor.dart';
 
 class ApiService {
   final Dio _dio = Dio(
@@ -14,6 +16,10 @@ class ApiService {
     ),
   );
 
+  ApiService() {
+    _dio.interceptors.add(TokenInterceptor(_dio));
+  }
+
   Future<AuthResponse> login(String email, String password) async {
     try {
       final response = await _dio.post(
@@ -22,7 +28,13 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return AuthResponse.fromJson(response.data);
+        final authResponse = AuthResponse.fromJson(response.data);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', authResponse.accessToken);
+        if (authResponse.refreshToken != null) {
+          await prefs.setString('refresh_token', authResponse.refreshToken!);
+        }
+        return authResponse;
       } else {
         throw Exception('Login failed: ${response.statusMessage}');
       }
@@ -55,5 +67,11 @@ class ApiService {
       }
       rethrow;
     }
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('access_token');
+    await prefs.remove('refresh_token');
   }
 }

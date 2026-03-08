@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/core/theme/app_theme.dart';
-import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
+import 'package:health_care_app/features/splash/presentation/pages/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,12 +12,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lansia Sehat',
+      title: 'My Health',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
