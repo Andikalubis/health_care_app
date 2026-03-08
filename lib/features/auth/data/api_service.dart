@@ -20,7 +20,7 @@ class ApiService {
         data: {'email': email, 'password': password},
       );
       return response;
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     }
   }
