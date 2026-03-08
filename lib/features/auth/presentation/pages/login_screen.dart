@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
@@ -42,10 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-              Text(
-                'Selamat Datang',
-                style: theme.textTheme.displayLarge,
-              ),
+              Text('Selamat Datang', style: theme.textTheme.displayLarge),
               const SizedBox(height: 8),
               Text(
                 'Silakan masuk untuk memantau kesehatan Anda hari ini.',
@@ -53,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 48),
               Text(
-                'Nama Pengguna / Email',
+                'Email',
                 style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18),
               ),
               const SizedBox(height: 8),
@@ -80,7 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -95,7 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const DashboardScreen(),
+                    ),
                   );
                 },
                 child: const Text('Masuk Sekarang'),
@@ -103,47 +104,21 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               Row(
                 children: [
-                  Expanded(child: Divider(color: theme.colorScheme.onSurface.withOpacity(0.2))),
+                  Expanded(
+                    child: Divider(
+                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text('Atau', style: theme.textTheme.bodyMedium),
                   ),
-                  Expanded(child: Divider(color: theme.colorScheme.onSurface.withOpacity(0.2))),
-                ],
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton(
-                onPressed: () {
-                  // TODO: Implement Google Login
-                },
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 64),
-                  side: BorderSide(color: theme.colorScheme.onSurface.withOpacity(0.2)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                  Expanded(
+                    child: Divider(
+                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                    ),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Simulation of Google Icon
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.g_mobiledata, color: Colors.blue, size: 30),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Masuk dengan Google',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
               const SizedBox(height: 24),
               Center(
