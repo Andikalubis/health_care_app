@@ -1,40 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
+import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _selectedIndex = 0;
+  String _userName = 'Memuat...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _userName = prefs.getString('user_name') ?? 'Tamu';
+      });
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    final apiService = ApiService();
+    await apiService.logout();
+
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Dynamic body based on selected index
+    Widget bodyContent;
+    switch (_selectedIndex) {
+      case 3:
+        bodyContent = const ProfileScreen();
+        break;
+      case 0:
+      default:
+        bodyContent = _buildHomeContent(theme);
+        break;
+    }
+
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(theme),
-              const SizedBox(height: 32),
-              _buildSOSButton(theme),
-              const SizedBox(height: 32),
-              Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
-              const SizedBox(height: 16),
-              _buildHealthMetricsGrid(theme),
-              const SizedBox(height: 32),
-              Text(
-                'Jadwal Obat Hari Ini',
-                style: theme.textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 16),
-              _buildMedicationList(theme),
-              const SizedBox(height: 24),
-            ],
-          ),
+      body: bodyContent,
+      bottomNavigationBar: _buildBottomNav(theme),
+    );
+  }
+
+  Widget _buildHomeContent(ThemeData theme) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(theme),
+            const SizedBox(height: 32),
+            _buildSOSButton(theme),
+            const SizedBox(height: 32),
+            Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 16),
+            _buildHealthMetricsGrid(theme),
+            const SizedBox(height: 32),
+            Text('Jadwal Obat Hari Ini', style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 16),
+            _buildMedicationList(theme),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(theme),
     );
   }
 
@@ -46,7 +105,7 @@ class DashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Halo, Bapak Budi!',
+              'Halo, $_userName!',
               style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
             ),
             const SizedBox(height: 4),
@@ -56,10 +115,56 @@ class DashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-          child: Icon(Icons.person, size: 35, color: theme.colorScheme.primary),
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'logout') {
+              _handleLogout();
+            } else if (value == 'profile') {
+              setState(() {
+                _selectedIndex = 3;
+              });
+            }
+          },
+          offset: const Offset(0, 50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            PopupMenuItem<String>(
+              value: 'profile',
+              child: ListTile(
+                leading: Icon(
+                  Icons.person_outline,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('Profil Saya'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem<String>(
+              value: 'logout',
+              child: ListTile(
+                leading: Icon(Icons.logout, color: theme.colorScheme.error),
+                title: Text(
+                  'Logout',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
+          ],
+          child: CircleAvatar(
+            radius: 30,
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            child: Icon(
+              Icons.person,
+              size: 35,
+              color: theme.colorScheme.primary,
+            ),
+          ),
         ),
       ],
     );
@@ -299,7 +404,8 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildBottomNav(ThemeData theme) {
     return BottomNavigationBar(
-      currentIndex: 0,
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
       selectedItemColor: theme.colorScheme.primary,
       unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
       type: BottomNavigationBarType.fixed,

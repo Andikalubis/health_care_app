@@ -32,6 +32,7 @@ class ApiService {
         final authResponse = AuthResponse.fromJson(response.data);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', authResponse.accessToken);
+        await prefs.setString('user_name', authResponse.user.name);
         if (authResponse.refreshToken != null) {
           await prefs.setString('refresh_token', authResponse.refreshToken!);
         }
@@ -52,5 +53,6 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
+    await prefs.remove('user_name');
   }
 }
