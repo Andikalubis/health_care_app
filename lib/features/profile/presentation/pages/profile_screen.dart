@@ -3,6 +3,8 @@ import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:health_care_app/core/widgets/app_button.dart';
+import 'package:health_care_app/core/widgets/app_divider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -67,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -77,7 +79,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                    backgroundColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.1,
+                    ),
                     child: Icon(
                       Icons.person,
                       size: 30,
@@ -113,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -127,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () {},
                   ),
 
-                  _divider(),
+                  const AppDivider(),
 
                   _buildProfileOption(
                     icon: Icons.settings_outlined,
@@ -135,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () {},
                   ),
 
-                  _divider(),
+                  const AppDivider(),
 
                   _buildProfileOption(
                     icon: Icons.help_outline,
@@ -149,34 +153,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 32),
 
             /// LOGOUT BUTTON
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _handleLogout,
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.error,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
+            AppButton(
+              text: 'Logout',
+              onPressed: _handleLogout,
+              icon: Icons.logout,
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: Colors.white,
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _divider() {
-    return Divider(
-      height: 1,
-      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
-      indent: 64,
-      endIndent: 20,
     );
   }
 

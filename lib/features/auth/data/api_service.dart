@@ -49,6 +49,38 @@ class ApiService {
     }
   }
 
+  Future<AuthResponse> register(
+    String name,
+    String email,
+    String password,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/register',
+        data: {'name': name, 'email': email, 'password': password},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final authResponse = AuthResponse.fromJson(response.data);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', authResponse.accessToken);
+        await prefs.setString('user_name', authResponse.user.name);
+        if (authResponse.refreshToken != null) {
+          await prefs.setString('refresh_token', authResponse.refreshToken!);
+        }
+        return authResponse;
+      } else {
+        throw Exception('Registration failed: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        final message = e.response?.data['message'] ?? 'Registration failed';
+        throw Exception(message);
+      }
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');

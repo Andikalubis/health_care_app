@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
+import 'package:health_care_app/core/widgets/metric_card.dart';
+import 'package:health_care_app/core/widgets/medication_item.dart';
+import 'package:health_care_app/core/widgets/sos_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -81,7 +83,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             _buildHeader(theme),
             const SizedBox(height: 32),
-            _buildSOSButton(theme),
+            SOSButton(
+              onTap: () {
+                // Implement SOS action
+              },
+            ),
             const SizedBox(height: 32),
             Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 16),
@@ -170,43 +176,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSOSButton(ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.error,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.error.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.warning_amber_rounded,
-            color: Colors.white,
-            size: 40,
-          ),
-          const SizedBox(width: 16),
-          Text(
-            'DARURAT / SOS',
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildHealthMetricsGrid(ThemeData theme) {
     return GridView.count(
       shrinkWrap: true,
@@ -215,190 +184,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
       childAspectRatio: 0.85,
-      children: [
-        _buildMetricCard(
-          theme,
+      children: const [
+        MetricCard(
           title: 'Detak Jantung',
           value: '72',
           unit: 'BPM',
           icon: Icons.favorite,
           color: Colors.redAccent,
         ),
-        _buildMetricCard(
-          theme,
+        MetricCard(
           title: 'Tekanan Darah',
           value: '120/80',
           unit: 'mmHg',
           icon: Icons.speed,
           color: Colors.blueAccent,
         ),
-        _buildMetricCard(
-          theme,
+        MetricCard(
           title: 'Langkah',
           value: '4.250',
           unit: 'Langkah',
           icon: Icons.directions_walk,
           color: Colors.orangeAccent,
         ),
-        _buildMetricCard(
-          theme,
+        MetricCard(
           title: 'Gula Darah',
           value: '110',
           unit: 'mg/dL',
           icon: Icons.bloodtype,
-          color: Colors.tealAccent.shade700,
+          color: Color(0xFF00796B), // tealAccent.shade700
         ),
       ],
-    );
-  }
-
-  Widget _buildMetricCard(
-    ThemeData theme, {
-    required String title,
-    required String value,
-    required String unit,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: theme.textTheme.displayLarge?.copyWith(
-                  fontSize: 24,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              Text(
-                unit,
-                style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildMedicationList(ThemeData theme) {
     return Column(
       children: [
-        _buildMedicationItem(
-          theme,
+        MedicationItem(
           name: 'Amlodipine',
           time: '08:00 WIB',
           taken: true,
+          onTakenPressed: () {},
         ),
         const SizedBox(height: 12),
-        _buildMedicationItem(
-          theme,
+        MedicationItem(
           name: 'Metformin',
           time: '13:00 WIB',
           taken: false,
+          onTakenPressed: () {},
         ),
         const SizedBox(height: 12),
-        _buildMedicationItem(
-          theme,
+        MedicationItem(
           name: 'Vitamin C',
           time: '19:00 WIB',
           taken: false,
+          onTakenPressed: () {},
         ),
       ],
-    );
-  }
-
-  Widget _buildMedicationItem(
-    ThemeData theme, {
-    required String name,
-    required String time,
-    required bool taken,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: taken
-            ? theme.colorScheme.primary.withValues(alpha: 0.05)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: taken
-              ? theme.colorScheme.primary.withValues(alpha: 0.3)
-              : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: taken
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.medication_liquid_rounded,
-              color: taken
-                  ? Colors.white
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(time, style: theme.textTheme.bodyMedium),
-              ],
-            ),
-          ),
-          if (taken)
-            const Icon(Icons.check_circle, color: Colors.green, size: 30)
-          else
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Minum'),
-            ),
-        ],
-      ),
     );
   }
 
