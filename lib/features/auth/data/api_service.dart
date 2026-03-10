@@ -4,10 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/models/auth_response.dart';
 import 'package:health_care_app/features/auth/data/token_interceptor.dart';
 
+import 'package:health_care_app/core/network/api_checker.dart';
+
 class ApiService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://10.10.90.20:8000/api',
+      baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://192.168.112.146:8000/api',
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 3),
       headers: {
@@ -19,6 +21,7 @@ class ApiService {
 
   ApiService() {
     _dio.interceptors.add(TokenInterceptor(_dio));
+    _dio.interceptors.add(ApiChecker.logger);
   }
 
   Future<AuthResponse> login(String email, String password) async {
@@ -42,7 +45,13 @@ class ApiService {
       }
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
-        final message = e.response?.data['message'] ?? 'Login failed';
+        final data = e.response?.data;
+        String message = 'Operation failed';
+        if (data is Map) {
+          message = data['message'] ?? message;
+        } else if (data is String) {
+          message = data;
+        }
         throw Exception(message);
       }
       rethrow;
@@ -74,7 +83,13 @@ class ApiService {
       }
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
-        final message = e.response?.data['message'] ?? 'Registration failed';
+        final data = e.response?.data;
+        String message = 'Registration failed';
+        if (data is Map) {
+          message = data['message'] ?? message;
+        } else if (data is String) {
+          message = data;
+        }
         throw Exception(message);
       }
       rethrow;
