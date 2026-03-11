@@ -6,6 +6,7 @@ import 'package:health_care_app/features/profile/presentation/pages/profile_scre
 import 'package:health_care_app/core/widgets/metric_card.dart';
 import 'package:health_care_app/core/widgets/medication_item.dart';
 import 'package:health_care_app/core/widgets/sos_button.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -129,6 +130,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               setState(() {
                 _selectedIndex = 3;
               });
+            } else if (value == 'chucker') {
+              ChuckerFlutter.showChuckerScreen();
             }
           },
           offset: const Offset(0, 50),
@@ -144,6 +147,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: theme.colorScheme.primary,
                 ),
                 title: const Text('Profil Saya'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'chucker',
+              child: ListTile(
+                leading: Icon(
+                  Icons.bug_report,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('Buka Chucker'),
                 contentPadding: EdgeInsets.zero,
                 dense: true,
               ),

@@ -5,6 +5,7 @@ import 'package:health_care_app/core/widgets/app_button.dart';
 import 'package:health_care_app/core/widgets/app_text_field.dart';
 import 'package:health_care_app/core/widgets/app_divider.dart';
 import 'package:health_care_app/features/auth/presentation/pages/register_screen.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -179,6 +180,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ChuckerFlutter.showChuckerScreen();
+        },
+        tooltip: 'Buka Chucker',
+        child: const Icon(Icons.bug_report),
       ),
     );
   }

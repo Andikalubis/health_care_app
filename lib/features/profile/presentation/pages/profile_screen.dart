@@ -57,60 +57,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
         centerTitle: true,
         elevation: 0,
       ),
+
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            /// CARD PROFILE
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            /// PROFILE HEADER
+            Column(
+              children: [
+                CircleAvatar(
+                  radius: 36,
+                  backgroundColor: theme.colorScheme.primary.withValues(
+                    alpha: 0.1,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: theme.colorScheme.primary.withValues(
-                      alpha: 0.1,
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      size: 30,
-                      color: theme.colorScheme.primary,
-                    ),
+                  child: Icon(
+                    Icons.person,
+                    size: 36,
+                    color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _userName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text('Akun Personal', style: theme.textTheme.bodySmall),
-                      ],
-                    ),
+                ),
+
+                const SizedBox(height: 12),
+
+                Text(
+                  _userName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text('Akun Personal', style: theme.textTheme.bodySmall),
+              ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
 
-            /// CARD MENU
+            /// MENU CARD
             Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
@@ -123,6 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
+
               child: Column(
                 children: [
                   _buildProfileOption(
@@ -172,22 +159,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-          ),
-        ),
+
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+
         child: Row(
           children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 28),
+            Icon(icon, color: theme.colorScheme.primary, size: 26),
+
             const SizedBox(width: 16),
+
             Expanded(
               child: Text(
                 title,
@@ -196,6 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
+
             Icon(
               Icons.chevron_right_rounded,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),

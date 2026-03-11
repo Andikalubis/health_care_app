@@ -3,6 +3,7 @@ import 'package:health_care_app/features/home/presentation/pages/dashboard_scree
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/core/widgets/app_button.dart';
 import 'package:health_care_app/core/widgets/app_text_field.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -45,7 +46,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final response = await _apiService.register(name, email, password);
+      final response = await _apiService.register(
+        name,
+        email,
+        password,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -177,6 +182,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ChuckerFlutter.showChuckerScreen();
+        },
+        tooltip: 'Buka Chucker',
+        child: const Icon(Icons.bug_report),
       ),
     );
   }
