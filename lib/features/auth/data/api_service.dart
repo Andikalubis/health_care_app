@@ -3,8 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/models/auth_response.dart';
 import 'package:health_care_app/features/auth/data/token_interceptor.dart';
-
-import 'package:health_care_app/core/network/api_checker.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class ApiService {
   final Dio _dio = Dio(
@@ -20,8 +19,7 @@ class ApiService {
   );
 
   ApiService() {
-    _dio.interceptors.add(TokenInterceptor(_dio));
-    _dio.interceptors.add(ApiChecker.logger);
+    _dio.interceptors.addAll([ChuckerDioInterceptor(), TokenInterceptor(_dio)]);
   }
 
   Future<AuthResponse> login(String email, String password) async {
@@ -33,12 +31,15 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(response.data);
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', authResponse.accessToken);
         await prefs.setString('user_name', authResponse.user.name);
+
         if (authResponse.refreshToken != null) {
           await prefs.setString('refresh_token', authResponse.refreshToken!);
         }
+
         return authResponse;
       } else {
         throw Exception('Login failed: ${response.statusMessage}');
@@ -46,14 +47,18 @@ class ApiService {
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
         final data = e.response?.data;
+
         String message = 'Operation failed';
+
         if (data is Map) {
           message = data['message'] ?? message;
         } else if (data is String) {
           message = data;
         }
+
         throw Exception(message);
       }
+
       rethrow;
     }
   }
@@ -71,12 +76,15 @@ class ApiService {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(response.data);
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', authResponse.accessToken);
         await prefs.setString('user_name', authResponse.user.name);
+
         if (authResponse.refreshToken != null) {
           await prefs.setString('refresh_token', authResponse.refreshToken!);
         }
+
         return authResponse;
       } else {
         throw Exception('Registration failed: ${response.statusMessage}');
@@ -84,14 +92,18 @@ class ApiService {
     } on DioException catch (e) {
       if (e.response != null && e.response?.data != null) {
         final data = e.response?.data;
+
         String message = 'Registration failed';
+
         if (data is Map) {
           message = data['message'] ?? message;
         } else if (data is String) {
           message = data;
         }
+
         throw Exception(message);
       }
+
       rethrow;
     }
   }

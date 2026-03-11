@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/dashboard_screen.dart';
+import 'package:health_care_app/core/utils/permission_helper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,6 +23,16 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 2));
 
     final prefs = await SharedPreferences.getInstance();
+
+    // Check if permissions have been requested before
+    final hasRequestedPermissions =
+        prefs.getBool('has_requested_permissions') ?? false;
+
+    if (!hasRequestedPermissions) {
+      await PermissionHelper.requestStandardPermissions();
+      await prefs.setBool('has_requested_permissions', true);
+    }
+
     final accessToken = prefs.getString('access_token');
 
     if (!mounted) return;

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:health_care_app/core/theme/app_theme.dart';
 import 'package:health_care_app/features/splash/presentation/pages/splash_screen.dart';
-
 import 'package:chucker_flutter/chucker_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  // Konfigurasi Chucker agar tampil di device (termasuk mode release)
+  ChuckerFlutter.showOnRelease = true;
+
   runApp(const MyApp());
 }
 
