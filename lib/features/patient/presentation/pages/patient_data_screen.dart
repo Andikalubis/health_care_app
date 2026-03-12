@@ -221,7 +221,7 @@ class _PatientDataFormState extends State<_PatientDataForm> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _gender,
+              initialValue: _gender,
               decoration: const InputDecoration(
                 labelText: 'Jenis Kelamin',
                 prefixIcon: Icon(Icons.transgender),
