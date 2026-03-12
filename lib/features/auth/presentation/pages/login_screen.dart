@@ -165,7 +165,11 @@ class _LoginScreenState extends State<LoginScreen> {
               Center(
                 child: TextButton(
                   onPressed: () {
-                    // TODO: Implement forgot password
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Fitur Lupa Password akan segera hadir.'),
+                      ),
+                    );
                   },
                   child: Text(
                     'Lupa kata sandi?',

@@ -50,6 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         name,
         email,
         password,
+        confirmPassword,
       );
 
       if (mounted) {

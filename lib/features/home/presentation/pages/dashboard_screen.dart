@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
+import 'package:health_care_app/features/home/presentation/pages/jadwal_screen.dart';
+import 'package:health_care_app/features/home/presentation/pages/laporan_screen.dart';
 import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
-import 'package:health_care_app/core/widgets/metric_card.dart';
-import 'package:health_care_app/core/widgets/medication_item.dart';
+import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
+import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
 import 'package:health_care_app/core/widgets/sos_button.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 
@@ -18,48 +20,82 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   String _userName = 'Memuat...';
+  final _api = ApiService();
+
+  VitalSignModel? _latestVital;
+  List<MedicineScheduleModel> _todayMeds = [];
+  bool _loadingVital = true;
+  bool _loadingMeds = true;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadDashboardData();
   }
 
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() {
-        _userName = prefs.getString('user_name') ?? 'Tamu';
-      });
+      setState(() => _userName = prefs.getString('user_name') ?? 'Tamu');
+    }
+  }
+
+  Future<void> _loadDashboardData() async {
+    // Load latest vital sign
+    try {
+      final vitals = await _api.getVitalSigns();
+      if (mounted && vitals.isNotEmpty) {
+        setState(() {
+          _latestVital = vitals.first;
+          _loadingVital = false;
+        });
+      } else {
+        if (mounted) setState(() => _loadingVital = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingVital = false);
+    }
+
+    // Load today's medication schedule
+    try {
+      final meds = await _api.getMedicineSchedules();
+      if (mounted) {
+        setState(() {
+          _todayMeds = meds.take(3).toList();
+          _loadingMeds = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingMeds = false);
     }
   }
 
   Future<void> _handleLogout() async {
-    final apiService = ApiService();
-    await apiService.logout();
-
+    await _api.logout();
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     }
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Dynamic body based on selected index
     Widget bodyContent;
     switch (_selectedIndex) {
+      case 1:
+        bodyContent = const JadwalScreen();
+        break;
+      case 2:
+        bodyContent = const LaporanScreen();
+        break;
       case 3:
         bodyContent = const ProfileScreen();
         break;
@@ -77,28 +113,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHomeContent(ThemeData theme) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(theme),
-            const SizedBox(height: 32),
-            SOSButton(
-              onTap: () {
-                // Implement SOS action
-              },
-            ),
-            const SizedBox(height: 32),
-            Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 16),
-            _buildHealthMetricsGrid(theme),
-            const SizedBox(height: 32),
-            Text('Jadwal Obat Hari Ini', style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 16),
-            _buildMedicationList(theme),
-            const SizedBox(height: 24),
-          ],
+      child: RefreshIndicator(
+        onRefresh: _loadDashboardData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(theme),
+              const SizedBox(height: 32),
+              SOSButton(onTap: () {}),
+              const SizedBox(height: 32),
+              Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
+              const SizedBox(height: 16),
+              _buildHealthMetricsGrid(theme),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Jadwal Obat Hari Ini',
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => _selectedIndex = 1),
+                    child: const Text('Lihat Semua'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildMedicationList(theme),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -117,34 +165,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Sudahkah Anda berolahraga hari ini?',
+              'Tarik layar untuk memperbarui data',
               style: theme.textTheme.bodyMedium,
             ),
           ],
         ),
         PopupMenuButton<String>(
-          onSelected: (value) {
+          onSelected: (value) async {
             if (value == 'logout') {
               _handleLogout();
             } else if (value == 'profile') {
-              setState(() {
-                _selectedIndex = 3;
-              });
+              setState(() => _selectedIndex = 3);
             } else if (value == 'chucker') {
               ChuckerFlutter.showChuckerScreen();
+            } else if (value == 'notifications') {
+              final prefs = await SharedPreferences.getInstance();
+              if (!mounted) return;
+              if (prefs.getString('access_token') == null) {
+                Navigator.pushReplacementNamed(context, '/login');
+                return;
+              }
+              Navigator.pushNamed(context, '/notifications');
             }
           },
           offset: const Offset(0, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+          itemBuilder: (context) => [
             PopupMenuItem<String>(
               value: 'profile',
               child: ListTile(
                 leading: Icon(
                   Icons.person_outline,
-                  color: theme.colorScheme.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text('Profil Saya'),
                 contentPadding: EdgeInsets.zero,
@@ -156,7 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ListTile(
                 leading: Icon(
                   Icons.bug_report,
-                  color: theme.colorScheme.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text('Buka Chucker'),
                 contentPadding: EdgeInsets.zero,
@@ -167,10 +221,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             PopupMenuItem<String>(
               value: 'logout',
               child: ListTile(
-                leading: Icon(Icons.logout, color: theme.colorScheme.error),
+                leading: Icon(
+                  Icons.logout,
+                  color: Theme.of(context).colorScheme.error,
+                ),
                 title: Text(
                   'Logout',
-                  style: TextStyle(color: theme.colorScheme.error),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
                 contentPadding: EdgeInsets.zero,
                 dense: true,
@@ -192,6 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHealthMetricsGrid(ThemeData theme) {
+    final vital = _latestVital;
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -199,63 +257,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
       childAspectRatio: 0.85,
-      children: const [
-        MetricCard(
+      children: [
+        _MetricCard(
           title: 'Detak Jantung',
-          value: '72',
+          value: _loadingVital ? '...' : (vital?.heartRate?.toString() ?? '-'),
           unit: 'BPM',
           icon: Icons.favorite,
           color: Colors.redAccent,
         ),
-        MetricCard(
+        _MetricCard(
           title: 'Tekanan Darah',
-          value: '120/80',
+          value: _loadingVital ? '...' : (vital?.bloodPressure ?? '-'),
           unit: 'mmHg',
           icon: Icons.speed,
           color: Colors.blueAccent,
         ),
-        MetricCard(
-          title: 'Langkah',
-          value: '4.250',
-          unit: 'Langkah',
-          icon: Icons.directions_walk,
-          color: Colors.orangeAccent,
-        ),
-        MetricCard(
-          title: 'Gula Darah',
-          value: '110',
-          unit: 'mg/dL',
+        _MetricCard(
+          title: 'Saturasi O₂',
+          value: _loadingVital
+              ? '...'
+              : (vital?.oxygenLevel?.toString() ?? '-'),
+          unit: '%',
           icon: Icons.bloodtype,
-          color: Color(0xFF00796B), // tealAccent.shade700
+          color: const Color(0xFF00796B),
+        ),
+        _MetricCard(
+          title: 'Suhu Tubuh',
+          value: _loadingVital
+              ? '...'
+              : (vital?.bodyTemperature?.toString() ?? '-'),
+          unit: '°C',
+          icon: Icons.thermostat,
+          color: Colors.orange,
         ),
       ],
     );
   }
 
   Widget _buildMedicationList(ThemeData theme) {
+    if (_loadingMeds) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_todayMeds.isEmpty) {
+      return Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.medication_outlined,
+                  size: 48,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Belum ada jadwal obat',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _selectedIndex = 1),
+                  child: const Text('Tambah Jadwal'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Column(
-      children: [
-        MedicationItem(
-          name: 'Amlodipine',
-          time: '08:00 WIB',
-          taken: true,
-          onTakenPressed: () {},
-        ),
-        const SizedBox(height: 12),
-        MedicationItem(
-          name: 'Metformin',
-          time: '13:00 WIB',
-          taken: false,
-          onTakenPressed: () {},
-        ),
-        const SizedBox(height: 12),
-        MedicationItem(
-          name: 'Vitamin C',
-          time: '19:00 WIB',
-          taken: false,
-          onTakenPressed: () {},
-        ),
-      ],
+      children: _todayMeds.map((med) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(Icons.medication, color: theme.colorScheme.primary),
+            ),
+            title: Text(
+              med.medicine?.name ?? 'Obat',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+            subtitle: Text(
+              '${med.drinkTime ?? '-'}  •  ${med.dosage ?? '-'}',
+              style: const TextStyle(fontSize: 15),
+            ),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.primary,
+            ),
+            onTap: () => setState(() => _selectedIndex = 1),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -290,6 +389,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
           label: 'Profil',
         ),
       ],
+    );
+  }
+}
+
+// ─── Internal metric card widget ────────────────────────────────────────────
+class _MetricCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String unit;
+  final IconData icon;
+  final Color color;
+
+  const _MetricCard({
+    required this.title,
+    required this.value,
+    required this.unit,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 40),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            unit,
+            style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

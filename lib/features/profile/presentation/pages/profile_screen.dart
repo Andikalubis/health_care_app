@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:health_care_app/core/widgets/app_button.dart';
 import 'package:health_care_app/core/widgets/app_divider.dart';
+import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
+import 'package:health_care_app/features/notification/presentation/pages/notification_list_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,22 +27,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() {
-        _userName = prefs.getString('user_name') ?? 'Tamu';
-      });
+      setState(() => _userName = prefs.getString('user_name') ?? 'Tamu');
     }
   }
 
   Future<void> _handleLogout() async {
     final apiService = ApiService();
     await apiService.logout();
-
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('access_token') == null) {
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 
@@ -48,55 +50,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Profil',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            /// PROFILE HEADER
-            Column(
-              children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: theme.colorScheme.primary.withValues(
-                    alpha: 0.1,
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 36,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                Text(
-                  _userName,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text('Akun Personal', style: theme.textTheme.bodySmall),
-              ],
+            // Header
+            CircleAvatar(
+              radius: 48,
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(
+                Icons.person,
+                size: 52,
+                color: theme.colorScheme.primary,
+              ),
             ),
-
+            const SizedBox(height: 12),
+            Text(
+              _userName,
+              style: theme.textTheme.headlineMedium?.copyWith(fontSize: 22),
+            ),
+            const SizedBox(height: 4),
+            Text('Akun Personal', style: theme.textTheme.bodyMedium),
             const SizedBox(height: 32),
 
-            /// MENU CARD
+            // Patient data & notification menu
             Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
@@ -109,28 +88,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-
               child: Column(
                 children: [
                   _buildProfileOption(
                     icon: Icons.person_outline,
-                    title: 'Edit Profil',
-                    onTap: () {},
+                    title: 'Data Pasien',
+                    subtitle: 'Kelola data kesehatan dasar',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const Scaffold(
+                          appBar: null,
+                          body: PatientDataScreenEmbed(),
+                        ),
+                      ),
+                    ),
                   ),
-
                   const AppDivider(),
-
                   _buildProfileOption(
-                    icon: Icons.settings_outlined,
-                    title: 'Pengaturan Aplikasi',
-                    onTap: () {},
+                    icon: Icons.notifications_outlined,
+                    title: 'Notifikasi',
+                    subtitle: 'Riwayat pesan dan peringatan',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationListScreen(),
+                      ),
+                    ),
                   ),
-
                   const AppDivider(),
-
                   _buildProfileOption(
                     icon: Icons.help_outline,
                     title: 'Pusat Bantuan',
+                    subtitle: 'FAQ dan kontak dukungan',
                     onTap: () {},
                   ),
                 ],
@@ -138,8 +128,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             const SizedBox(height: 32),
-
-            /// LOGOUT BUTTON
             AppButton(
               text: 'Logout',
               onPressed: _handleLogout,
@@ -156,32 +144,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileOption({
     required IconData icon,
     required String title,
+    String? subtitle,
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         child: Row(
           children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 26),
-
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(icon, color: theme.colorScheme.primary, size: 22),
+            ),
             const SizedBox(width: 16),
-
             Expanded(
-              child: Text(
-                title,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
+                    ),
+                ],
               ),
             ),
-
             Icon(
               Icons.chevron_right_rounded,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
@@ -189,6 +186,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Embedded patient data screen (no Scaffold wrap)
+class PatientDataScreenEmbed extends StatelessWidget {
+  const PatientDataScreenEmbed({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Data Pasien',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+        ),
+      ),
+      body: const PatientDataScreen(),
     );
   }
 }
