@@ -7,8 +7,10 @@ import 'package:health_care_app/features/home/presentation/pages/laporan_screen.
 import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
-import 'package:health_care_app/core/widgets/sos_button.dart';
+import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
+import 'package:health_care_app/features/home/presentation/pages/master_data_screen.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
+// import 'package:health_care_app/core/widgets/sos_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,6 +22,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   String _userName = 'Memuat...';
+  String _userRole = 'user';
   final _api = ApiService();
 
   VitalSignModel? _latestVital;
@@ -37,7 +40,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() => _userName = prefs.getString('user_name') ?? 'Tamu');
+      setState(() {
+        _userName = prefs.getString('user_name') ?? 'Tamu';
+        _userRole = prefs.getString('user_role') ?? 'user';
+      });
     }
   }
 
@@ -91,23 +97,111 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Widget bodyContent;
     switch (_selectedIndex) {
       case 1:
-        bodyContent = const JadwalScreen();
+        bodyContent = _userRole == 'admin'
+            ? const PatientDataScreen()
+            : const JadwalScreen();
         break;
       case 2:
-        bodyContent = const LaporanScreen();
+        bodyContent = _userRole == 'admin'
+            ? const MasterDataScreen()
+            : const LaporanScreen();
         break;
       case 3:
         bodyContent = const ProfileScreen();
         break;
       case 0:
       default:
-        bodyContent = _buildHomeContent(theme);
+        bodyContent = _userRole == 'admin'
+            ? _buildAdminHomeContent(theme)
+            : _buildHomeContent(theme);
         break;
     }
 
     return Scaffold(
       body: bodyContent,
       bottomNavigationBar: _buildBottomNav(theme),
+    );
+  }
+
+  Widget _buildAdminHomeContent(ThemeData theme) {
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: _loadDashboardData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(theme),
+              const SizedBox(height: 32),
+              Text('Panel Admin', style: theme.textTheme.displayMedium),
+              const SizedBox(height: 8),
+              Text(
+                'Selamat datang di pusat pemantauan kesehatan.',
+                style: theme.textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 32),
+              _buildAdminQuickActions(theme),
+              const SizedBox(height: 40),
+              Text('Ringkasan Pasien', style: theme.textTheme.headlineMedium),
+              const SizedBox(height: 16),
+              _buildAdminStatsGrid(theme),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminQuickActions(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: _ActionCard(
+            title: 'Pasien',
+            subtitle: 'Monitoring Data',
+            icon: Icons.people_outline,
+            onTap: () => setState(() => _selectedIndex = 1),
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _ActionCard(
+            title: 'Master',
+            subtitle: 'Kelola Data',
+            icon: Icons.storage_rounded,
+            onTap: () => setState(() => _selectedIndex = 2),
+            color: Colors.orange,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdminStatsGrid(ThemeData theme) {
+    return Column(
+      children: [
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: CircleAvatar(
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(Icons.show_chart, color: theme.colorScheme.primary),
+            ),
+            title: const Text('Lihat Semua Laporan'),
+            subtitle: const Text(
+              'Pantau perkembangan kesehatan seluruh pasien',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => setState(() => _selectedIndex = 1),
+          ),
+        ),
+      ],
     );
   }
 
@@ -123,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               _buildHeader(theme),
               const SizedBox(height: 32),
-              SOSButton(onTap: () {}),
+              // SOSButton(onTap: () {}),
               const SizedBox(height: 32),
               Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
               const SizedBox(height: 16),
@@ -359,6 +453,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBottomNav(ThemeData theme) {
+    final items = [
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.dashboard_rounded),
+        label: 'Beranda',
+      ),
+    ];
+
+    if (_userRole == 'admin') {
+      items.addAll([
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.people_rounded),
+          label: 'Pasien',
+        ),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.settings_suggest_rounded),
+          label: 'Master',
+        ),
+      ]);
+    } else {
+      items.addAll([
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_month_rounded),
+          label: 'Jadwal',
+        ),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.insert_chart_outlined_rounded),
+          label: 'Laporan',
+        ),
+      ]);
+    }
+
+    items.add(
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.settings_rounded),
+        label: 'Profil',
+      ),
+    );
+
     return BottomNavigationBar(
       currentIndex: _selectedIndex,
       onTap: _onItemTapped,
@@ -371,24 +503,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
         fontSize: 16,
       ),
       unselectedLabelStyle: const TextStyle(fontSize: 14),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard_rounded),
-          label: 'Beranda',
+      items: items,
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _ActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_rounded),
-          label: 'Jadwal',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: color.withValues(alpha: 0.7),
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.insert_chart_outlined_rounded),
-          label: 'Laporan',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: 'Profil',
-        ),
-      ],
+      ),
     );
   }
 }

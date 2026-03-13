@@ -15,6 +15,7 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
   List<PatientDataModel> _patients = [];
   bool _loading = true;
   String? _error;
+  String _userRole = 'user';
 
   @override
   void initState() {
@@ -28,6 +29,9 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
       _error = null;
     });
     try {
+      final prefs = await SharedPreferences.getInstance();
+      _userRole = prefs.getString('user_role') ?? 'user';
+
       final data = await _api.getPatientData();
       if (mounted) {
         setState(() {
@@ -48,13 +52,53 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return _loading
-        ? const Center(child: CircularProgressIndicator())
-        : _error != null
-        ? _buildError()
-        : _patients.isEmpty
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) return _buildError();
+
+    if (_userRole == 'admin') {
+      return _buildPatientList(theme);
+    }
+
+    return _patients.isEmpty
         ? _buildAddForm(theme, null)
         : _buildAddForm(theme, _patients.first);
+  }
+
+  Widget _buildPatientList(ThemeData theme) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Daftar Pasien'),
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+        ],
+      ),
+      body: _patients.isEmpty
+          ? const Center(child: Text('Tidak ada data pasien'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _patients.length,
+              itemBuilder: (context, index) {
+                final p = _patients[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text(
+                      p.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      '${p.gender == 'male' ? 'Laki-laki' : 'Perempuan'} • ${p.birthDate}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // Navigate to patient detail (to be implemented)
+                    },
+                  ),
+                );
+              },
+            ),
+    );
   }
 
   Widget _buildAddForm(ThemeData theme, PatientDataModel? existing) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/meal/data/models/meal_schedule_model.dart';
 import 'add_meal_schedule_screen.dart';
 
@@ -16,6 +17,7 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
   List<MealScheduleModel> _items = [];
   bool _loading = true;
   String? _error;
+  String _userRole = 'user';
 
   @override
   void initState() {
@@ -29,6 +31,9 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
       _error = null;
     });
     try {
+      final prefs = await SharedPreferences.getInstance();
+      _userRole = prefs.getString('user_role') ?? 'user';
+
       final data = await _api.getMealSchedules();
       if (mounted) {
         setState(() {
@@ -71,17 +76,21 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
               ],
             )
           : null,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final ok = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddMealScheduleScreen()),
-          );
-          if (ok == true) _load();
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah Jadwal'),
-      ),
+      floatingActionButton: _userRole == 'admin'
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () async {
+                final ok = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddMealScheduleScreen(),
+                  ),
+                );
+                if (ok == true) _load();
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah Jadwal'),
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -133,10 +142,12 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
               Text(item.notes!, style: TextStyle(color: Colors.grey.shade600)),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.red),
-          onPressed: () => _confirmDelete(item.id!),
-        ),
+        trailing: _userRole == 'admin'
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: () => _confirmDelete(item.id!),
+              ),
       ),
     );
   }

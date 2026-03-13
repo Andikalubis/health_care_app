@@ -69,6 +69,7 @@ class ApiService {
         await prefs.setString('access_token', authResponse.accessToken);
         await prefs.setString('user_name', authResponse.user.name);
         await prefs.setInt('user_id', authResponse.user.id);
+        await prefs.setString('user_role', authResponse.user.role);
         if (authResponse.refreshToken != null) {
           await prefs.setString('refresh_token', authResponse.refreshToken!);
         }
@@ -103,6 +104,7 @@ class ApiService {
         await prefs.setString('access_token', authResponse.accessToken);
         await prefs.setString('user_name', authResponse.user.name);
         await prefs.setInt('user_id', authResponse.user.id);
+        await prefs.setString('user_role', authResponse.user.role);
         if (authResponse.refreshToken != null) {
           await prefs.setString('refresh_token', authResponse.refreshToken!);
         }
@@ -124,6 +126,7 @@ class ApiService {
     await prefs.remove('refresh_token');
     await prefs.remove('user_name');
     await prefs.remove('user_id');
+    await prefs.remove('user_role');
   }
 
   // ─── PATIENT DATA ──────────────────────────────────────────

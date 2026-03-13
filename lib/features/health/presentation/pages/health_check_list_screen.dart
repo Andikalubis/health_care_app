@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/health/data/models/health_check_model.dart';
 import 'add_health_check_screen.dart';
 
@@ -16,6 +17,7 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
   List<HealthCheckModel> _items = [];
   bool _loading = true;
   String? _error;
+  String _userRole = 'user';
 
   @override
   void initState() {
@@ -29,6 +31,9 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
       _error = null;
     });
     try {
+      final prefs = await SharedPreferences.getInstance();
+      _userRole = prefs.getString('user_role') ?? 'user';
+
       final data = await _api.getHealthChecks();
       if (mounted) {
         setState(() {
@@ -104,17 +109,21 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
               ],
             )
           : null,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final ok = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddHealthCheckScreen()),
-          );
-          if (ok == true) _load();
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah'),
-      ),
+      floatingActionButton: _userRole == 'admin'
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () async {
+                final ok = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddHealthCheckScreen(),
+                  ),
+                );
+                if (ok == true) _load();
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah'),
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -185,14 +194,15 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
                 ),
               ),
             ),
-            IconButton(
-              icon: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-                size: 20,
+            if (_userRole != 'admin')
+              IconButton(
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.red,
+                  size: 20,
+                ),
+                onPressed: () => _confirmDelete(item.id!),
               ),
-              onPressed: () => _confirmDelete(item.id!),
-            ),
           ],
         ),
       ),

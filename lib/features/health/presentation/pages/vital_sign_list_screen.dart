@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
 import 'add_vital_sign_screen.dart';
 
@@ -16,6 +17,7 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
   List<VitalSignModel> _items = [];
   bool _loading = true;
   String? _error;
+  String _userRole = 'user';
 
   @override
   void initState() {
@@ -29,6 +31,9 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
       _error = null;
     });
     try {
+      final prefs = await SharedPreferences.getInstance();
+      _userRole = prefs.getString('user_role') ?? 'user';
+
       final data = await _api.getVitalSigns();
       if (mounted) {
         setState(() {
@@ -71,17 +76,19 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
               ],
             )
           : null,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddVitalSignScreen()),
-          );
-          if (result == true) _load();
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah'),
-      ),
+      floatingActionButton: _userRole == 'admin'
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddVitalSignScreen()),
+                );
+                if (result == true) _load();
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah'),
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -162,10 +169,11 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () => _confirmDelete(item.id!),
-                ),
+                if (_userRole != 'admin')
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () => _confirmDelete(item.id!),
+                  ),
               ],
             ),
             const Divider(),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
 import 'add_medicine_schedule_screen.dart';
 
@@ -18,6 +19,7 @@ class _MedicineScheduleListScreenState
   List<MedicineScheduleModel> _items = [];
   bool _loading = true;
   String? _error;
+  String _userRole = 'user';
 
   @override
   void initState() {
@@ -31,6 +33,9 @@ class _MedicineScheduleListScreenState
       _error = null;
     });
     try {
+      final prefs = await SharedPreferences.getInstance();
+      _userRole = prefs.getString('user_role') ?? 'user';
+
       final data = await _api.getMedicineSchedules();
       if (mounted) {
         setState(() {
@@ -73,19 +78,21 @@ class _MedicineScheduleListScreenState
               ],
             )
           : null,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final ok = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const AddMedicineScheduleScreen(),
+      floatingActionButton: _userRole == 'admin'
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () async {
+                final ok = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddMedicineScheduleScreen(),
+                  ),
+                );
+                if (ok == true) _load();
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Tambah Jadwal'),
             ),
-          );
-          if (ok == true) _load();
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah Jadwal'),
-      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -177,10 +184,11 @@ class _MedicineScheduleListScreenState
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () => _confirmDelete(item.id!),
-            ),
+            if (_userRole != 'admin')
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: () => _confirmDelete(item.id!),
+              ),
           ],
         ),
       ),
