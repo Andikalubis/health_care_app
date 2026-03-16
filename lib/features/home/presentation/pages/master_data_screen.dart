@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/features/notification/presentation/pages/master_notification_list_screen.dart';
 
 class MasterDataScreen extends StatelessWidget {
   const MasterDataScreen({super.key});
@@ -50,6 +51,20 @@ class MasterDataScreen extends StatelessWidget {
                   subtitle: 'Atur ambang batas tanda vital',
                   icon: Icons.assignment_late_outlined,
                   onTap: () {},
+                ),
+                _buildMasterItem(
+                  theme,
+                  title: 'Master Notifikasi',
+                  subtitle: 'Kelola template notifikasi sistem',
+                  icon: Icons.notifications_active_outlined,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MasterNotificationListScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

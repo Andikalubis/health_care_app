@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
@@ -90,7 +91,7 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
               label: const Text('Tambah'),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppListSkeleton()
           : _error != null
           ? Center(
               child: Column(

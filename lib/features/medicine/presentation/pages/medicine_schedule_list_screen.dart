@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
@@ -94,7 +95,7 @@ class _MedicineScheduleListScreenState
               label: const Text('Tambah Jadwal'),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppListSkeleton()
           : _error != null
           ? _buildError()
           : _items.isEmpty

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,7 +53,7 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const Scaffold(body: AppListSkeleton());
     if (_error != null) return _buildError();
 
     if (_userRole == 'admin') {

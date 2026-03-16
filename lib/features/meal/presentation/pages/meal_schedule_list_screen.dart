@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/meal/data/models/meal_schedule_model.dart';
@@ -92,7 +93,7 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
               label: const Text('Tambah Jadwal'),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppListSkeleton()
           : _error != null
           ? _buildError()
           : _items.isEmpty

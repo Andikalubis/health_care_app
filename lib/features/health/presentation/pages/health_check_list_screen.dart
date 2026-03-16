@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/health/data/models/health_check_model.dart';
@@ -125,7 +126,7 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
               label: const Text('Tambah'),
             ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppListSkeleton()
           : _error != null
           ? _buildError()
           : _items.isEmpty
