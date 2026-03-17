@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
+import 'package:health_care_app/core/network/error_interceptor.dart';
 import 'package:health_care_app/features/auth/data/token_interceptor.dart';
 
 abstract class BaseApi {
@@ -19,7 +20,11 @@ abstract class BaseApi {
         },
       ),
     );
-    dio.interceptors.addAll([ChuckerDioInterceptor(), TokenInterceptor(dio)]);
+    dio.interceptors.addAll([
+      ChuckerDioInterceptor(),
+      TokenInterceptor(dio),
+      ErrorInterceptor(),
+    ]);
   }
 
   // ─── Helpers ───────────────────────────────────────────────
