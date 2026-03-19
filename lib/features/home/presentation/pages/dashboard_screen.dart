@@ -1,31 +1,240 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
+import 'package:health_care_app/features/home/presentation/pages/jadwal_screen.dart';
+import 'package:health_care_app/features/home/presentation/pages/laporan_screen.dart';
+import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
+import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
+import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
+import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
+import 'package:health_care_app/features/home/presentation/pages/master_data_screen.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
+// import 'package:health_care_app/core/widgets/sos_button.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _selectedIndex = 0;
+  String _userName = 'Memuat...';
+  String _userRole = 'user';
+  final _api = ApiService();
+
+  VitalSignModel? _latestVital;
+  List<MedicineScheduleModel> _todayMeds = [];
+  bool _loadingVital = true;
+  bool _loadingMeds = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _userName = prefs.getString('user_name') ?? 'Tamu';
+        _userRole = prefs.getString('user_role') ?? 'user';
+      });
+    }
+  }
+
+  Future<void> _loadDashboardData() async {
+    // Load latest vital sign
+    try {
+      final vitals = await _api.getVitalSigns();
+      if (mounted && vitals.isNotEmpty) {
+        setState(() {
+          _latestVital = vitals.first;
+          _loadingVital = false;
+        });
+      } else {
+        if (mounted) setState(() => _loadingVital = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingVital = false);
+    }
+
+    // Load today's medication schedule
+    try {
+      final meds = await _api.getMedicineSchedules();
+      if (mounted) {
+        setState(() {
+          _todayMeds = meds.take(3).toList();
+          _loadingMeds = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingMeds = false);
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    await _api.logout();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    Widget bodyContent;
+    switch (_selectedIndex) {
+      case 1:
+        bodyContent = _userRole == 'admin'
+            ? const PatientDataScreen()
+            : const JadwalScreen();
+        break;
+      case 2:
+        bodyContent = _userRole == 'admin'
+            ? const MasterDataScreen()
+            : const LaporanScreen();
+        break;
+      case 3:
+        bodyContent = const ProfileScreen();
+        break;
+      case 0:
+      default:
+        bodyContent = _userRole == 'admin'
+            ? _buildAdminHomeContent(theme)
+            : _buildHomeContent(theme);
+        break;
+    }
+
     return Scaffold(
-      body: SafeArea(
+      body: bodyContent,
+      bottomNavigationBar: _buildBottomNav(theme),
+    );
+  }
+
+  Widget _buildAdminHomeContent(ThemeData theme) {
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(theme),
               const SizedBox(height: 32),
-              _buildSOSButton(theme),
+              Text('Panel Admin', style: theme.textTheme.displayMedium),
+              const SizedBox(height: 8),
+              Text(
+                'Selamat datang di pusat pemantauan kesehatan.',
+                style: theme.textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 32),
+              _buildAdminQuickActions(theme),
+              const SizedBox(height: 40),
+              Text('Ringkasan Pasien', style: theme.textTheme.headlineMedium),
+              const SizedBox(height: 16),
+              _buildAdminStatsGrid(theme),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminQuickActions(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: _ActionCard(
+            title: 'Pasien',
+            subtitle: 'Monitoring Data',
+            icon: Icons.people_outline,
+            onTap: () => setState(() => _selectedIndex = 1),
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _ActionCard(
+            title: 'Master',
+            subtitle: 'Kelola Data',
+            icon: Icons.storage_rounded,
+            onTap: () => setState(() => _selectedIndex = 2),
+            color: Colors.orange,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdminStatsGrid(ThemeData theme) {
+    return Column(
+      children: [
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: CircleAvatar(
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(Icons.show_chart, color: theme.colorScheme.primary),
+            ),
+            title: const Text('Lihat Semua Laporan'),
+            subtitle: const Text(
+              'Pantau perkembangan kesehatan seluruh pasien',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => setState(() => _selectedIndex = 1),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHomeContent(ThemeData theme) {
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: _loadDashboardData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(theme),
+              const SizedBox(height: 32),
+              // SOSButton(onTap: () {}),
               const SizedBox(height: 32),
               Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
               const SizedBox(height: 16),
               _buildHealthMetricsGrid(theme),
               const SizedBox(height: 32),
-              Text(
-                'Jadwal Obat Hari Ini',
-                style: theme.textTheme.headlineMedium,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Jadwal Obat Hari Ini',
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => _selectedIndex = 1),
+                    child: const Text('Lihat Semua'),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               _buildMedicationList(theme),
@@ -34,7 +243,6 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(theme),
     );
   }
 
@@ -46,63 +254,96 @@ class DashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Halo, Bapak Budi!',
+              'Halo, $_userName!',
               style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
             ),
             const SizedBox(height: 4),
             Text(
-              'Sudahkah Anda berolahraga hari ini?',
+              'Tarik layar untuk memperbarui data',
               style: theme.textTheme.bodyMedium,
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-          child: Icon(Icons.person, size: 35, color: theme.colorScheme.primary),
+        PopupMenuButton<String>(
+          onSelected: (value) async {
+            if (value == 'logout') {
+              _handleLogout();
+            } else if (value == 'profile') {
+              setState(() => _selectedIndex = 3);
+            } else if (value == 'chucker') {
+              ChuckerFlutter.showChuckerScreen();
+            } else if (value == 'notifications') {
+              final prefs = await SharedPreferences.getInstance();
+              if (!mounted) return;
+              if (prefs.getString('access_token') == null) {
+                Navigator.pushReplacementNamed(context, '/login');
+                return;
+              }
+              Navigator.pushNamed(context, '/notifications');
+            }
+          },
+          offset: const Offset(0, 50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: 'profile',
+              child: ListTile(
+                leading: Icon(
+                  Icons.person_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: const Text('Profil Saya'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'chucker',
+              child: ListTile(
+                leading: Icon(
+                  Icons.bug_report,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: const Text('Buka Chucker'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem<String>(
+              value: 'logout',
+              child: ListTile(
+                leading: Icon(
+                  Icons.logout,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(
+                  'Logout',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ),
+          ],
+          child: CircleAvatar(
+            radius: 30,
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            child: Icon(
+              Icons.person,
+              size: 35,
+              color: theme.colorScheme.primary,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSOSButton(ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.error,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.error.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.warning_amber_rounded,
-            color: Colors.white,
-            size: 40,
-          ),
-          const SizedBox(width: 16),
-          Text(
-            'DARURAT / SOS',
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildHealthMetricsGrid(ThemeData theme) {
+    final vital = _latestVital;
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -111,195 +352,148 @@ class DashboardScreen extends StatelessWidget {
       crossAxisSpacing: 16,
       childAspectRatio: 0.85,
       children: [
-        _buildMetricCard(
-          theme,
+        _MetricCard(
           title: 'Detak Jantung',
-          value: '72',
+          value: _loadingVital ? '...' : (vital?.heartRate?.toString() ?? '-'),
           unit: 'BPM',
           icon: Icons.favorite,
           color: Colors.redAccent,
         ),
-        _buildMetricCard(
-          theme,
+        _MetricCard(
           title: 'Tekanan Darah',
-          value: '120/80',
+          value: _loadingVital ? '...' : (vital?.bloodPressure ?? '-'),
           unit: 'mmHg',
           icon: Icons.speed,
           color: Colors.blueAccent,
         ),
-        _buildMetricCard(
-          theme,
-          title: 'Langkah',
-          value: '4.250',
-          unit: 'Langkah',
-          icon: Icons.directions_walk,
-          color: Colors.orangeAccent,
-        ),
-        _buildMetricCard(
-          theme,
-          title: 'Gula Darah',
-          value: '110',
-          unit: 'mg/dL',
+        _MetricCard(
+          title: 'Saturasi O₂',
+          value: _loadingVital
+              ? '...'
+              : (vital?.oxygenLevel?.toString() ?? '-'),
+          unit: '%',
           icon: Icons.bloodtype,
-          color: Colors.tealAccent.shade700,
+          color: const Color(0xFF00796B),
+        ),
+        _MetricCard(
+          title: 'Suhu Tubuh',
+          value: _loadingVital
+              ? '...'
+              : (vital?.bodyTemperature?.toString() ?? '-'),
+          unit: '°C',
+          icon: Icons.thermostat,
+          color: Colors.orange,
         ),
       ],
-    );
-  }
-
-  Widget _buildMetricCard(
-    ThemeData theme, {
-    required String title,
-    required String value,
-    required String unit,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: theme.textTheme.displayLarge?.copyWith(
-                  fontSize: 24,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              Text(
-                unit,
-                style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildMedicationList(ThemeData theme) {
-    return Column(
-      children: [
-        _buildMedicationItem(
-          theme,
-          name: 'Amlodipine',
-          time: '08:00 WIB',
-          taken: true,
-        ),
-        const SizedBox(height: 12),
-        _buildMedicationItem(
-          theme,
-          name: 'Metformin',
-          time: '13:00 WIB',
-          taken: false,
-        ),
-        const SizedBox(height: 12),
-        _buildMedicationItem(
-          theme,
-          name: 'Vitamin C',
-          time: '19:00 WIB',
-          taken: false,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMedicationItem(
-    ThemeData theme, {
-    required String name,
-    required String time,
-    required bool taken,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: taken
-            ? theme.colorScheme.primary.withValues(alpha: 0.05)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: taken
-              ? theme.colorScheme.primary.withValues(alpha: 0.3)
-              : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: taken
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.medication_liquid_rounded,
-              color: taken
-                  ? Colors.white
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
+    if (_loadingMeds) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_todayMeds.isEmpty) {
+      return Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Icon(
+                  Icons.medication_outlined,
+                  size: 48,
+                  color: Colors.grey.shade400,
                 ),
-                Text(time, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 8),
+                Text(
+                  'Belum ada jadwal obat',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _selectedIndex = 1),
+                  child: const Text('Tambah Jadwal'),
+                ),
               ],
             ),
           ),
-          if (taken)
-            const Icon(Icons.check_circle, color: Colors.green, size: 30)
-          else
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Minum'),
+        ),
+      );
+    }
+    return Column(
+      children: _todayMeds.map((med) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(Icons.medication, color: theme.colorScheme.primary),
             ),
-        ],
-      ),
+            title: Text(
+              med.medicine?.name ?? 'Obat',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+            subtitle: Text(
+              '${med.drinkTime ?? '-'}  •  ${med.dosage ?? '-'}',
+              style: const TextStyle(fontSize: 15),
+            ),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.primary,
+            ),
+            onTap: () => setState(() => _selectedIndex = 1),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildBottomNav(ThemeData theme) {
+    final items = [
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.dashboard_rounded),
+        label: 'Beranda',
+      ),
+    ];
+
+    if (_userRole == 'admin') {
+      items.addAll([
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.people_rounded),
+          label: 'Pasien',
+        ),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.settings_suggest_rounded),
+          label: 'Master',
+        ),
+      ]);
+    } else {
+      items.addAll([
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_month_rounded),
+          label: 'Jadwal',
+        ),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.insert_chart_outlined_rounded),
+          label: 'Laporan',
+        ),
+      ]);
+    }
+
+    items.add(
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.settings_rounded),
+        label: 'Profil',
+      ),
+    );
+
     return BottomNavigationBar(
-      currentIndex: 0,
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
       selectedItemColor: theme.colorScheme.primary,
       unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
       type: BottomNavigationBarType.fixed,
@@ -309,24 +503,122 @@ class DashboardScreen extends StatelessWidget {
         fontSize: 16,
       ),
       unselectedLabelStyle: const TextStyle(fontSize: 14),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard_rounded),
-          label: 'Beranda',
+      items: items,
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _ActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_rounded),
-          label: 'Jadwal',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: color.withValues(alpha: 0.7),
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.insert_chart_outlined_rounded),
-          label: 'Laporan',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: 'Profil',
-        ),
-      ],
+      ),
+    );
+  }
+}
+
+// ─── Internal metric card widget ────────────────────────────────────────────
+class _MetricCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String unit;
+  final IconData icon;
+  final Color color;
+
+  const _MetricCard({
+    required this.title,
+    required this.value,
+    required this.unit,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 40),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            unit,
+            style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }

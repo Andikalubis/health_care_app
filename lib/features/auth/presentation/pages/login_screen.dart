@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/home/presentation/pages/dashboard_screen.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/widgets/app_button.dart';
+import 'package:health_care_app/core/widgets/app_text_field.dart';
+import 'package:health_care_app/core/widgets/app_divider.dart';
+import 'package:health_care_app/features/auth/presentation/pages/register_screen.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -96,85 +101,75 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: theme.textTheme.bodyLarge,
               ),
               const SizedBox(height: 48),
-              Text(
-                'Email',
-                style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 8),
-              TextField(
+              AppTextField(
+                label: 'Email',
+                hintText: 'Contoh: budi@email.com',
                 controller: _emailController,
-                style: const TextStyle(fontSize: 20),
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  hintText: 'Contoh: budi@email.com',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
+                prefixIcon: const Icon(Icons.person_outline),
               ),
               const SizedBox(height: 24),
-              Text(
-                'Kata Sandi',
-                style: theme.textTheme.headlineMedium?.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 8),
-              TextField(
+              AppTextField(
+                label: 'Kata Sandi',
+                hintText: 'Masukkan kata sandi Anda',
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
-                style: const TextStyle(fontSize: 20),
-                decoration: InputDecoration(
-                  hintText: 'Masukkan kata sandi Anda',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                 ),
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Masuk Sekarang'),
+              AppButton(
+                text: 'Masuk Sekarang',
+                onPressed: _handleLogin,
+                isLoading: _isLoading,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Divider(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Atau', style: theme.textTheme.bodyMedium),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                  Text('Belum punya akun?', style: theme.textTheme.bodyMedium),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Daftar Sekarang',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
+              const AppDivider(text: 'Atau'),
+              const SizedBox(height: 24),
               Center(
                 child: TextButton(
                   onPressed: () {
-                    // TODO: Implement forgot password
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Fitur Lupa Password akan segera hadir.'),
+                      ),
+                    );
                   },
                   child: Text(
                     'Lupa kata sandi?',
@@ -189,6 +184,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ChuckerFlutter.showChuckerScreen();
+        },
+        tooltip: 'Buka Chucker',
+        child: const Icon(Icons.bug_report),
       ),
     );
   }
