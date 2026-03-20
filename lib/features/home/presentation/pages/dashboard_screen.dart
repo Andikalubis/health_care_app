@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
-import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/jadwal_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/laporan_screen.dart';
 import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
@@ -9,7 +8,7 @@ import 'package:health_care_app/features/health/data/models/vital_sign_model.dar
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
 import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/master_data_screen.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
+import 'package:health_care_app/features/notification/presentation/pages/notification_list_screen.dart';
 // import 'package:health_care_app/core/widgets/sos_button.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -74,17 +73,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loadingMeds = false);
-    }
-  }
-
-  Future<void> _handleLogout() async {
-    await _api.logout();
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
     }
   }
 
@@ -264,76 +252,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        PopupMenuButton<String>(
-          onSelected: (value) async {
-            if (value == 'logout') {
-              _handleLogout();
-            } else if (value == 'profile') {
-              setState(() => _selectedIndex = 3);
-            } else if (value == 'chucker') {
-              ChuckerFlutter.showChuckerScreen();
-            } else if (value == 'notifications') {
-              final prefs = await SharedPreferences.getInstance();
-              if (!mounted) return;
-              if (prefs.getString('access_token') == null) {
-                Navigator.pushReplacementNamed(context, '/login');
-                return;
-              }
-              Navigator.pushNamed(context, '/notifications');
-            }
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationListScreen()),
+            );
           },
-          offset: const Offset(0, 50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          itemBuilder: (context) => [
-            PopupMenuItem<String>(
-              value: 'profile',
-              child: ListTile(
-                leading: Icon(
-                  Icons.person_outline,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: const Text('Profil Saya'),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
+          child: Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-            PopupMenuItem<String>(
-              value: 'chucker',
-              child: ListTile(
-                leading: Icon(
-                  Icons.bug_report,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: const Text('Buka Chucker'),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem<String>(
-              value: 'logout',
-              child: ListTile(
-                leading: Icon(
-                  Icons.logout,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                title: Text(
-                  'Logout',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ),
-          ],
-          child: CircleAvatar(
-            radius: 30,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
             child: Icon(
-              Icons.person,
-              size: 35,
+              Icons.notifications_none_rounded,
+              size: 30,
               color: theme.colorScheme.primary,
             ),
           ),

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PatientDataScreen extends StatefulWidget {
-  const PatientDataScreen({super.key});
+  final bool forceSelfMode;
+  final bool hideAppBar;
+  const PatientDataScreen({
+    super.key,
+    this.forceSelfMode = false,
+    this.hideAppBar = false,
+  });
 
   @override
   State<PatientDataScreen> createState() => _PatientDataScreenState();
@@ -35,8 +42,13 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
 
       final data = await _api.getPatientData();
       if (mounted) {
-        setState(() {
+        if (widget.forceSelfMode) {
+          final userId = prefs.getInt('user_id');
+          _patients = data.where((p) => p.userId == userId).toList();
+        } else {
           _patients = data;
+        }
+        setState(() {
           _loading = false;
         });
       }
@@ -56,7 +68,7 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
     if (_loading) return const Scaffold(body: AppListSkeleton());
     if (_error != null) return _buildError();
 
-    if (_userRole == 'admin') {
+    if (_userRole == 'admin' && !widget.forceSelfMode) {
       return _buildPatientList(theme);
     }
 
@@ -66,16 +78,11 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
   }
 
   Widget _buildPatientList(ThemeData theme) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daftar Pasien'),
-        actions: [
-          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
-        ],
-      ),
-      body: _patients.isEmpty
-          ? const Center(child: Text('Tidak ada data pasien'))
-          : ListView.builder(
+    final body = _patients.isEmpty
+        ? const Center(child: Text('Tidak ada data pasien'))
+        : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: _patients.length,
               itemBuilder: (context, index) {
@@ -99,6 +106,18 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
                 );
               },
             ),
+          );
+
+    if (widget.hideAppBar) return body;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Daftar Pasien'),
+        actions: [
+          IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+        ],
+      ),
+      body: body,
     );
   }
 
@@ -356,6 +375,30 @@ class _PatientDataFormState extends State<_PatientDataForm> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Embedded patient data screen (no Scaffold wrap)
+class PatientDataScreenEmbed extends StatelessWidget {
+  final bool forceSelfMode;
+  final String title;
+  const PatientDataScreenEmbed({
+    super.key,
+    this.forceSelfMode = false,
+    this.title = 'Data Pasien',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          title,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+        ),
+      ),
+      body: PatientDataScreen(forceSelfMode: forceSelfMode, hideAppBar: true),
     );
   }
 }
