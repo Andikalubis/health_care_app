@@ -9,7 +9,9 @@ import 'package:health_care_app/features/medicine/data/models/medicine_schedule_
 import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/master_data_screen.dart';
 import 'package:health_care_app/features/notification/presentation/pages/notification_list_screen.dart';
-// import 'package:health_care_app/core/widgets/sos_button.dart';
+import 'package:health_care_app/features/medicine/presentation/pages/medicine_today_screen.dart';
+import 'package:health_care_app/core/utils/date_format_helper.dart';
+import 'package:health_care_app/core/services/notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -73,6 +75,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loadingMeds = false);
+    }
+
+    // Load and schedule today's notifications
+    if (_userRole != 'admin') {
+      _loadTodayDosesAndSchedule();
+    }
+  }
+
+  Future<void> _loadTodayDosesAndSchedule() async {
+    try {
+      final response = await _api.getTodayDoses();
+      final List doses = response;
+      final notificationService = LocalNotificationService();
+
+      for (var dose in doses) {
+        final status = dose['status'];
+        if (status == 'pending') {
+          DateTime scheduledTime = DateTime.parse(dose['scheduled_for']);
+          if (scheduledTime.isAfter(DateTime.now())) {
+            int scheduleId = dose['schedule']['id'];
+            int timeId = dose['schedule_time']['id'];
+            int notificationId = scheduleId * 1000 + timeId;
+
+            await notificationService.scheduleNotification(
+              id: notificationId,
+              title: 'Waktunya Minum Obat!',
+              body:
+                  '${dose['schedule']['medicine']['name']} - ${dose['schedule']['dose_per_intake']} unit',
+              scheduledTime: scheduledTime,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // Failed to schedule notifications
     }
   }
 
@@ -219,7 +256,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: theme.textTheme.headlineMedium,
                   ),
                   TextButton(
-                    onPressed: () => setState(() => _selectedIndex = 1),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MedicineTodayScreen(),
+                      ),
+                    ),
                     child: const Text('Lihat Semua'),
                   ),
                 ],
@@ -373,14 +415,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
             ),
             subtitle: Text(
-              '${med.drinkTime ?? '-'}  •  ${med.dosage ?? '-'}',
+              '${med.scheduleTimes?.map((t) => formatTime(t.drinkTime ?? '')).join(', ') ?? '-'}  •  ${med.dosage ?? '-'}',
               style: const TextStyle(fontSize: 15),
             ),
             trailing: Icon(
               Icons.chevron_right,
               color: theme.colorScheme.primary,
             ),
-            onTap: () => setState(() => _selectedIndex = 1),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MedicineTodayScreen()),
+            ),
           ),
         );
       }).toList(),

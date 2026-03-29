@@ -3,6 +3,7 @@ import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/meal/data/models/meal_schedule_model.dart';
 import 'package:health_care_app/features/meal/data/models/meal_type_model.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
+import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 
 class AddMealScheduleScreen extends StatefulWidget {
   const AddMealScheduleScreen({super.key});
@@ -50,9 +51,7 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
         });
       }
     } catch (_) {
-      if (mounted) {
-        setState(() => _loadingData = false);
-      }
+      if (mounted) setState(() => _loadingData = false);
     }
   }
 
@@ -61,14 +60,6 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
     _mealTimeCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null && mounted) _mealTimeCtrl.text = picked.format(context);
   }
 
   Future<void> _submit() async {
@@ -156,15 +147,11 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
                       ),
                       const SizedBox(height: 16),
                     ],
-                    TextFormField(
+                    // TimePickerField stores value as HH:mm:00 (24-hr, API-ready)
+                    TimePickerField(
                       controller: _mealTimeCtrl,
-                      readOnly: true,
-                      onTap: _pickTime,
-                      decoration: const InputDecoration(
-                        labelText: 'Waktu Makan',
-                        prefixIcon: Icon(Icons.access_time),
-                        suffixIcon: Icon(Icons.chevron_right),
-                      ),
+                      label: 'Waktu Makan',
+                      prefixIcon: Icons.access_time,
                       validator: (v) =>
                           (v == null || v.isEmpty) ? 'Waktu wajib diisi' : null,
                     ),

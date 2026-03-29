@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/notification/data/models/notification_model.dart';
@@ -131,7 +132,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               Text(item.message!, style: const TextStyle(fontSize: 15)),
             const SizedBox(height: 4),
             Text(
-              item.sendTime ?? item.createdAt ?? '-',
+              formatDateTimeShort(item.sendTime ?? item.createdAt),
               style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
             ),
           ],

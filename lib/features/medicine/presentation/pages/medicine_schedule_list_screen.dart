@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -151,24 +152,57 @@ class _MedicineScheduleListScreenState
                       'Dosis: ${item.dosage}',
                       style: const TextStyle(fontSize: 15),
                     ),
-                  if (item.drinkTime != null)
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.access_time,
-                          size: 16,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          item.drinkTime!,
-                          style: const TextStyle(fontSize: 15),
-                        ),
-                      ],
+                  if (item.scheduleTimes != null &&
+                      item.scheduleTimes!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Waktu Minum:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: item.scheduleTimes!.map((time) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: Colors.blue,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                formatTime(time.drinkTime ?? ''),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   if (item.startDate != null || item.endDate != null)
                     Text(
-                      '${item.startDate ?? '?'} s/d ${item.endDate ?? '?'}',
+                      '${formatDateOnly(item.startDate)} s/d ${formatDateOnly(item.endDate)}',
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 14,

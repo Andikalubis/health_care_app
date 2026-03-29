@@ -105,7 +105,7 @@ class _HealthLimitFormScreenState extends State<HealthLimitFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     DropdownButtonFormField<int>(
-                      value: _selectedTypeId,
+                      initialValue: _selectedTypeId,
                       decoration: const InputDecoration(
                         labelText: 'Jenis Pemeriksaan',
                         border: OutlineInputBorder(),

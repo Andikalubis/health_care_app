@@ -4,10 +4,16 @@ import 'package:health_care_app/core/theme/app_theme.dart';
 import 'package:health_care_app/features/splash/presentation/pages/splash_screen.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:health_care_app/features/error/presentation/pages/not_found_page.dart';
+import 'package:health_care_app/core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  final notificationService = LocalNotificationService();
+  await notificationService.init();
+  await notificationService.requestPermissions();
+
   ChuckerFlutter.showOnRelease = true;
   runApp(const MyApp());
 }

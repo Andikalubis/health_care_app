@@ -12,10 +12,6 @@ class ServerErrorPage extends StatelessWidget {
           'Terjadi kesalahan pada server kami. Silakan coba lagi beberapa saat lagi.',
       buttonText: 'Coba Lagi',
       onButtonPressed: () => Navigator.of(context).pop(),
-      icon: Image.asset(
-        'assets/images/server_error_illustration.png',
-        height: 250,
-      ),
     );
   }
 }

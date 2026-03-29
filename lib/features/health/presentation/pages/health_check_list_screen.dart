@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -172,7 +173,7 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
             if (item.notes != null)
               Text(item.notes!, style: TextStyle(color: Colors.grey.shade600)),
             Text(
-              item.checkTime ?? item.createdAt ?? '-',
+              formatDateTimeShort(item.checkTime ?? item.createdAt),
               style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
             ),
           ],

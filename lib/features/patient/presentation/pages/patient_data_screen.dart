@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
+import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -198,18 +199,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
     super.dispose();
   }
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(1950),
-      firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      _birthCtrl.text = picked.toIso8601String().split('T').first;
-    }
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -297,15 +286,13 @@ class _PatientDataFormState extends State<_PatientDataForm> {
               onChanged: (v) => setState(() => _gender = v!),
             ),
             const SizedBox(height: 8),
-            TextFormField(
+            DatePickerField(
               controller: _birthCtrl,
-              readOnly: true,
-              onTap: _pickDate,
-              decoration: const InputDecoration(
-                labelText: 'Tanggal Lahir',
-                prefixIcon: Icon(Icons.cake),
-                suffixIcon: Icon(Icons.chevron_right),
-              ),
+              label: 'Tanggal Lahir',
+              prefixIcon: Icons.cake,
+              firstDate: DateTime(1920),
+              lastDate: DateTime.now(),
+              initialDate: DateTime(1990),
               validator: (v) =>
                   (v == null || v.isEmpty) ? 'Tanggal lahir wajib diisi' : null,
             ),
