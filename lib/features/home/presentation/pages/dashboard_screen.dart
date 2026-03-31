@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
-import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/jadwal_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/laporan_screen.dart';
 import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
@@ -9,8 +8,10 @@ import 'package:health_care_app/features/health/data/models/vital_sign_model.dar
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
 import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/master_data_screen.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
-// import 'package:health_care_app/core/widgets/sos_button.dart';
+import 'package:health_care_app/features/notification/presentation/pages/notification_list_screen.dart';
+import 'package:health_care_app/features/medicine/presentation/pages/medicine_today_screen.dart';
+import 'package:health_care_app/core/utils/date_format_helper.dart';
+import 'package:health_care_app/core/services/notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -75,16 +76,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (_) {
       if (mounted) setState(() => _loadingMeds = false);
     }
+
+    // Load and schedule today's notifications
+    if (_userRole != 'admin') {
+      _loadTodayDosesAndSchedule();
+    }
   }
 
-  Future<void> _handleLogout() async {
-    await _api.logout();
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
+  Future<void> _loadTodayDosesAndSchedule() async {
+    try {
+      final response = await _api.getTodayDoses();
+      final List doses = response;
+      final notificationService = LocalNotificationService();
+
+      for (var dose in doses) {
+        final status = dose['status'];
+        if (status == 'pending') {
+          DateTime scheduledTime = DateTime.parse(dose['scheduled_for']);
+          if (scheduledTime.isAfter(DateTime.now())) {
+            int scheduleId = dose['schedule']['id'];
+            int timeId = dose['schedule_time']['id'];
+            int notificationId = scheduleId * 1000 + timeId;
+
+            await notificationService.scheduleNotification(
+              id: notificationId,
+              title: 'Waktunya Minum Obat!',
+              body:
+                  '${dose['schedule']['medicine']['name']} - ${dose['schedule']['dose_per_intake']} unit',
+              scheduledTime: scheduledTime,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // Failed to schedule notifications
     }
   }
 
@@ -231,7 +256,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: theme.textTheme.headlineMedium,
                   ),
                   TextButton(
-                    onPressed: () => setState(() => _selectedIndex = 1),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MedicineTodayScreen(),
+                      ),
+                    ),
                     child: const Text('Lihat Semua'),
                   ),
                 ],
@@ -264,76 +294,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        PopupMenuButton<String>(
-          onSelected: (value) async {
-            if (value == 'logout') {
-              _handleLogout();
-            } else if (value == 'profile') {
-              setState(() => _selectedIndex = 3);
-            } else if (value == 'chucker') {
-              ChuckerFlutter.showChuckerScreen();
-            } else if (value == 'notifications') {
-              final prefs = await SharedPreferences.getInstance();
-              if (!mounted) return;
-              if (prefs.getString('access_token') == null) {
-                Navigator.pushReplacementNamed(context, '/login');
-                return;
-              }
-              Navigator.pushNamed(context, '/notifications');
-            }
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationListScreen()),
+            );
           },
-          offset: const Offset(0, 50),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          itemBuilder: (context) => [
-            PopupMenuItem<String>(
-              value: 'profile',
-              child: ListTile(
-                leading: Icon(
-                  Icons.person_outline,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: const Text('Profil Saya'),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
+          child: Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-            PopupMenuItem<String>(
-              value: 'chucker',
-              child: ListTile(
-                leading: Icon(
-                  Icons.bug_report,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: const Text('Buka Chucker'),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem<String>(
-              value: 'logout',
-              child: ListTile(
-                leading: Icon(
-                  Icons.logout,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                title: Text(
-                  'Logout',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ),
-          ],
-          child: CircleAvatar(
-            radius: 30,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
             child: Icon(
-              Icons.person,
-              size: 35,
+              Icons.notifications_none_rounded,
+              size: 30,
               color: theme.colorScheme.primary,
             ),
           ),
@@ -438,14 +415,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
             ),
             subtitle: Text(
-              '${med.drinkTime ?? '-'}  •  ${med.dosage ?? '-'}',
+              '${med.scheduleTimes?.map((t) => formatTime(t.drinkTime ?? '')).join(', ') ?? '-'}  •  ${med.dosage ?? '-'}',
               style: const TextStyle(fontSize: 15),
             ),
             trailing: Icon(
               Icons.chevron_right,
               color: theme.colorScheme.primary,
             ),
-            onTap: () => setState(() => _selectedIndex = 1),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MedicineTodayScreen()),
+            ),
           ),
         );
       }).toList(),

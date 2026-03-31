@@ -53,7 +53,25 @@ mixin MedicineApi on BaseApi {
     await dio.delete('/medicine-schedules/$id');
   }
 
-  // ─── MEDICINE HISTORIES ───────────────────────────────────
+  // ─── MEDICINE HISTORIES & DOSING ──────────────────────────
+  Future<List<Map<String, dynamic>>> getTodayDoses() async {
+    final res = await dio.get('/medicine-schedules/today');
+    final data = unwrap(res);
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  Future<MedicineHistoryModel> takeDose({
+    required int scheduleId,
+    required int scheduleTimeId,
+    required String status,
+  }) async {
+    final res = await dio.post(
+      '/medicine-schedules/$scheduleId/take',
+      data: {'schedule_time_id': scheduleTimeId, 'status': status},
+    );
+    return MedicineHistoryModel.fromJson(unwrap(res));
+  }
+
   Future<List<MedicineHistoryModel>> getMedicineHistories() async {
     final res = await dio.get('/medicine-histories');
     final data = unwrap(res);

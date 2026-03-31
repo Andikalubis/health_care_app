@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:health_care_app/core/widgets/app_button.dart';
 import 'package:health_care_app/core/widgets/app_divider.dart';
 import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
@@ -17,6 +16,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'Memuat...';
+  String _userRole = 'user';
 
   @override
   void initState() {
@@ -27,7 +27,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() => _userName = prefs.getString('user_name') ?? 'Tamu');
+      setState(() {
+        _userName = prefs.getString('user_name') ?? 'Tamu';
+        _userRole = prefs.getString('user_role') ?? 'user';
+      });
     }
   }
 
@@ -92,14 +95,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   _buildProfileOption(
                     icon: Icons.person_outline,
-                    title: 'Data Pasien',
-                    subtitle: 'Kelola data kesehatan dasar',
+                    title: _userRole == 'admin' ? 'Data Diri' : 'Data Pasien',
+                    subtitle: _userRole == 'admin'
+                        ? 'Kelola data pribadi Anda'
+                        : 'Kelola data kesehatan dasar',
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const Scaffold(
+                        builder: (_) => Scaffold(
                           appBar: null,
-                          body: PatientDataScreenEmbed(),
+                          body: PatientDataScreenEmbed(
+                            forceSelfMode: _userRole == 'admin',
+                            title: _userRole == 'admin'
+                                ? 'Data Diri'
+                                : 'Data Pasien',
+                          ),
                         ),
                       ),
                     ),
@@ -186,24 +196,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Embedded patient data screen (no Scaffold wrap)
-class PatientDataScreenEmbed extends StatelessWidget {
-  const PatientDataScreenEmbed({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Data Pasien',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: const PatientDataScreen(),
     );
   }
 }

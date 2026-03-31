@@ -87,6 +87,14 @@ mixin HealthApi on BaseApi {
     return HealthLimitModel.fromJson(unwrap(res));
   }
 
+  Future<HealthLimitModel> updateHealthLimit(
+    int id,
+    HealthLimitModel model,
+  ) async {
+    final res = await dio.put('/health-limits/$id', data: model.toJson());
+    return HealthLimitModel.fromJson(unwrap(res));
+  }
+
   Future<void> deleteHealthLimit(int id) async {
     await dio.delete('/health-limits/$id');
   }

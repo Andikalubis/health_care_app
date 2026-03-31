@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
+import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 
 class AddVitalSignScreen extends StatefulWidget {
   final VitalSignModel? existing;
@@ -20,6 +21,7 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
   final _tempCtrl = TextEditingController();
   final _breathingCtrl = TextEditingController();
   final _oxygenCtrl = TextEditingController();
+  final _checkTimeCtrl = TextEditingController();
 
   bool _loading = false;
   List<PatientDataModel> _patients = [];
@@ -28,6 +30,8 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
   @override
   void initState() {
     super.initState();
+    // Default check_time to now
+    _checkTimeCtrl.text = DateTime.now().toIso8601String().substring(0, 19);
     _loadPatients();
     if (widget.existing != null) {
       final e = widget.existing!;
@@ -36,6 +40,7 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
       _tempCtrl.text = e.bodyTemperature?.toString() ?? '';
       _breathingCtrl.text = e.breathingRate?.toString() ?? '';
       _oxygenCtrl.text = e.oxygenLevel?.toString() ?? '';
+      if (e.checkTime != null) _checkTimeCtrl.text = e.checkTime!;
     }
   }
 
@@ -45,10 +50,11 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
       if (mounted) {
         setState(() {
           _patients = patients;
-          if (_patients.isNotEmpty) {
+          if (_patients.isNotEmpty && widget.existing == null) {
             _selectedPatientId = _patients.first.id;
+          } else if (widget.existing != null) {
+            _selectedPatientId = widget.existing!.patientId;
           }
-          // _loadingData = false; // This variable is not declared, keeping original behavior.
         });
       }
     } catch (_) {}
@@ -61,6 +67,7 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
     _tempCtrl.dispose();
     _breathingCtrl.dispose();
     _oxygenCtrl.dispose();
+    _checkTimeCtrl.dispose();
     super.dispose();
   }
 
@@ -75,7 +82,7 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
         bodyTemperature: double.tryParse(_tempCtrl.text.trim()),
         breathingRate: int.tryParse(_breathingCtrl.text.trim()),
         oxygenLevel: double.tryParse(_oxygenCtrl.text.trim()),
-        checkTime: DateTime.now().toIso8601String(),
+        checkTime: _checkTimeCtrl.text.trim(),
       );
       if (widget.existing != null) {
         await _api.updateVitalSign(widget.existing!.id!, model);
@@ -156,7 +163,18 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
                 Icons.bloodtype,
                 isDecimal: true,
               ),
-              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: DateTimePickerField(
+                  controller: _checkTimeCtrl,
+                  label: 'Waktu Pengukuran',
+                  prefixIcon: Icons.event,
+                  lastDate: DateTime.now().add(const Duration(minutes: 5)),
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Waktu wajib diisi' : null,
+                ),
+              ),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 child: _loading

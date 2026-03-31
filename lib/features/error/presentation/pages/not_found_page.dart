@@ -13,10 +13,6 @@ class NotFoundPage extends StatelessWidget {
       buttonText: 'Kembali ke Beranda',
       onButtonPressed: () =>
           Navigator.of(context).popUntil((route) => route.isFirst),
-      icon: Image.asset(
-        'assets/images/not_found_illustration.png',
-        height: 250,
-      ),
     );
   }
 }

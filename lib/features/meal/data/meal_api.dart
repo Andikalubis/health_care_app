@@ -15,6 +15,11 @@ mixin MealApi on BaseApi {
     return MealTypeModel.fromJson(unwrap(res));
   }
 
+  Future<MealTypeModel> updateMealType(int id, MealTypeModel model) async {
+    final res = await dio.put('/meal-types/$id', data: model.toJson());
+    return MealTypeModel.fromJson(unwrap(res));
+  }
+
   Future<void> deleteMealType(int id) async {
     await dio.delete('/meal-types/$id');
   }

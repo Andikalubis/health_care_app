@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -136,7 +137,10 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
                 children: [
                   const Icon(Icons.access_time, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
-                  Text(item.mealTime!, style: const TextStyle(fontSize: 15)),
+                  Text(
+                    formatTime(item.mealTime),
+                    style: const TextStyle(fontSize: 15),
+                  ),
                 ],
               ),
             if (item.notes != null)

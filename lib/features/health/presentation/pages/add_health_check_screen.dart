@@ -4,6 +4,7 @@ import 'package:health_care_app/features/health/data/models/health_check_model.d
 import 'package:health_care_app/features/health/data/models/health_type_model.dart';
 import 'package:health_care_app/features/health/data/models/health_limit_model.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
+import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 
 class AddHealthCheckScreen extends StatefulWidget {
   const AddHealthCheckScreen({super.key});
@@ -17,6 +18,7 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
   final _api = ApiService();
   final _valueCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final _checkTimeCtrl = TextEditingController();
 
   bool _loading = false;
   bool _loadingData = true;
@@ -29,6 +31,8 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
   @override
   void initState() {
     super.initState();
+    // Default to now so the field shows a value on open
+    _checkTimeCtrl.text = DateTime.now().toIso8601String().substring(0, 19);
     _loadData();
   }
 
@@ -44,9 +48,7 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
           _patients = results[0] as List<PatientDataModel>;
           _healthTypes = results[1] as List<HealthTypeModel>;
           _limits = results[2] as List<HealthLimitModel>;
-          if (_patients.isNotEmpty) {
-            _selectedPatientId = _patients.first.id;
-          }
+          if (_patients.isNotEmpty) _selectedPatientId = _patients.first.id;
           if (_healthTypes.isNotEmpty) {
             _selectedHealthTypeId = _healthTypes.first.id;
           }
@@ -54,9 +56,7 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _loadingData = false);
-      }
+      if (mounted) setState(() => _loadingData = false);
     }
   }
 
@@ -67,12 +67,10 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
       orElse: () => null,
     );
     if (limit == null) return 'normal';
-
     if (limit.dangerMin != null && val <= limit.dangerMin!) return 'danger';
     if (limit.dangerMax != null && val >= limit.dangerMax!) return 'danger';
     if (limit.warningMin != null && val <= limit.warningMin!) return 'warning';
     if (limit.warningMax != null && val >= limit.warningMax!) return 'warning';
-
     return 'normal';
   }
 
@@ -80,6 +78,7 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
   void dispose() {
     _valueCtrl.dispose();
     _notesCtrl.dispose();
+    _checkTimeCtrl.dispose();
     super.dispose();
   }
 
@@ -94,7 +93,7 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
         resultValue: resVal,
         status: _calculateStatus(resVal, _selectedHealthTypeId),
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-        checkTime: DateTime.now().toIso8601String(),
+        checkTime: _checkTimeCtrl.text.trim(),
       );
       await _api.storeHealthCheck(model);
       if (mounted) {
@@ -181,6 +180,15 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
                       ),
                       validator: (v) =>
                           (v == null || v.isEmpty) ? 'Hasil wajib diisi' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    DateTimePickerField(
+                      controller: _checkTimeCtrl,
+                      label: 'Waktu Pemeriksaan',
+                      prefixIcon: Icons.event,
+                      lastDate: DateTime.now().add(const Duration(minutes: 5)),
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? 'Waktu wajib diisi' : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(

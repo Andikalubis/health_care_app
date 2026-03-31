@@ -1,8 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/notification/presentation/pages/master_notification_list_screen.dart';
+import 'package:health_care_app/features/health/presentation/pages/health_type_list_screen.dart';
+import 'package:health_care_app/features/meal/presentation/pages/meal_type_list_screen.dart';
+import 'package:health_care_app/features/medicine/presentation/pages/medicine_list_screen.dart';
+import 'package:health_care_app/features/health/presentation/pages/health_limit_list_screen.dart';
+import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class MasterDataScreen extends StatelessWidget {
+class MasterDataScreen extends StatefulWidget {
   const MasterDataScreen({super.key});
+
+  @override
+  State<MasterDataScreen> createState() => _MasterDataScreenState();
+}
+
+class _MasterDataScreenState extends State<MasterDataScreen> {
+  String _userRole = 'user';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() => _userRole = prefs.getString('user_role') ?? 'user');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,28 +55,56 @@ class MasterDataScreen extends StatelessWidget {
                   title: 'Jenis Pemeriksaan',
                   subtitle: 'Kelola kategori pemeriksaan kesehatan',
                   icon: Icons.health_and_safety_outlined,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HealthTypeListScreen(),
+                      ),
+                    );
+                  },
                 ),
                 _buildMasterItem(
                   theme,
                   title: 'Jenis Makanan',
                   subtitle: 'Kelola kategori jadwal makan',
                   icon: Icons.restaurant_menu_outlined,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MealTypeListScreen(),
+                      ),
+                    );
+                  },
                 ),
                 _buildMasterItem(
                   theme,
                   title: 'Daftar Obat',
                   subtitle: 'Kelola data obat-obatan',
                   icon: Icons.medication_outlined,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MedicineListScreen(),
+                      ),
+                    );
+                  },
                 ),
                 _buildMasterItem(
                   theme,
                   title: 'Batas Kesehatan',
                   subtitle: 'Atur ambang batas tanda vital',
                   icon: Icons.assignment_late_outlined,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HealthLimitListScreen(),
+                      ),
+                    );
+                  },
                 ),
                 _buildMasterItem(
                   theme,
@@ -66,6 +120,21 @@ class MasterDataScreen extends StatelessWidget {
                     );
                   },
                 ),
+                if (_userRole == 'admin')
+                  _buildMasterItem(
+                    theme,
+                    title: 'Daftar Pasien',
+                    subtitle: 'Kelola data seluruh pasien',
+                    icon: Icons.people_outline,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PatientDataScreenEmbed(),
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           ),
