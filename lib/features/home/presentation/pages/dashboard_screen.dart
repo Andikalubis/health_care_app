@@ -12,6 +12,7 @@ import 'package:health_care_app/features/notification/presentation/pages/notific
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_today_screen.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
+import 'package:chucker_flutter/chucker_flutter.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -145,6 +146,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       body: bodyContent,
       bottomNavigationBar: _buildBottomNav(theme),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => ChuckerFlutter.showChuckerScreen(),
+        tooltip: 'Buka Chucker',
+        child: const Icon(Icons.bug_report),
+      ),
     );
   }
 
