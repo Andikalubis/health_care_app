@@ -6,7 +6,8 @@ import 'package:health_care_app/features/patient/data/models/patient_data_model.
 import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 
 class AddMealScheduleScreen extends StatefulWidget {
-  const AddMealScheduleScreen({super.key});
+  final MealScheduleModel? existing;
+  const AddMealScheduleScreen({super.key, this.existing});
 
   @override
   State<AddMealScheduleScreen> createState() => _AddMealScheduleScreenState();
@@ -28,6 +29,13 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.existing != null) {
+      final e = widget.existing!;
+      _selectedPatientId = e.patientId;
+      _selectedMealTypeId = e.mealTypeId;
+      _mealTimeCtrl.text = e.mealTime ?? '';
+      _notesCtrl.text = e.notes ?? '';
+    }
     _loadData();
   }
 
@@ -41,11 +49,13 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
         setState(() {
           _patients = results[0] as List<PatientDataModel>;
           _mealTypes = results[1] as List<MealTypeModel>;
-          if (_patients.isNotEmpty) {
-            _selectedPatientId = _patients.first.id;
-          }
-          if (_mealTypes.isNotEmpty) {
-            _selectedMealTypeId = _mealTypes.first.id;
+          if (widget.existing == null) {
+            if (_patients.isNotEmpty && _selectedPatientId == null) {
+              _selectedPatientId = _patients.first.id;
+            }
+            if (_mealTypes.isNotEmpty && _selectedMealTypeId == null) {
+              _selectedMealTypeId = _mealTypes.first.id;
+            }
           }
           _loadingData = false;
         });
@@ -72,7 +82,11 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
         mealTime: _mealTimeCtrl.text.trim(),
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       );
-      await _api.storeMealSchedule(model);
+      if (widget.existing == null) {
+        await _api.storeMealSchedule(model);
+      } else {
+        await _api.updateMealSchedule(widget.existing!.id!, model);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -94,8 +108,11 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEdit = widget.existing != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Jadwal Makan')),
+      appBar: AppBar(
+        title: Text(isEdit ? 'Edit Jadwal Makan' : 'Tambah Jadwal Makan'),
+      ),
       body: _loadingData
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -176,7 +193,11 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Simpan Jadwal Makan'),
+                          : Text(
+                              isEdit
+                                  ? 'Perbarui Jadwal Makan'
+                                  : 'Simpan Jadwal Makan',
+                            ),
                     ),
                   ],
                 ),

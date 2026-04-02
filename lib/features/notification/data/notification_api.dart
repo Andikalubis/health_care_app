@@ -14,6 +14,20 @@ mixin NotificationApi on BaseApi {
     await dio.delete('/notifications/$id');
   }
 
+  Future<void> markAsRead(int id) async {
+    await dio.put('/notifications/$id/read');
+  }
+
+  Future<void> markAllAsRead() async {
+    await dio.put('/notifications/read-all');
+  }
+
+  Future<int> getUnreadNotificationCount() async {
+    final res = await dio.get('/notifications/unread-count');
+    final data = unwrap(res);
+    return data['unread_count'] ?? 0;
+  }
+
   // ─── MASTER NOTIFICATIONS ─────────────────────────────────
   Future<List<MasterNotificationModel>> getMasterNotifications() async {
     final res = await dio.get('/master-notifications');

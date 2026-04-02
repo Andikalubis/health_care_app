@@ -1,3 +1,5 @@
+import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
+
 class VitalSignModel {
   final int? id;
   final int? patientId;
@@ -8,6 +10,7 @@ class VitalSignModel {
   final double? oxygenLevel;
   final String? checkTime;
   final String? createdAt;
+  final PatientDataModel? patient;
 
   VitalSignModel({
     this.id,
@@ -19,6 +22,7 @@ class VitalSignModel {
     this.oxygenLevel,
     this.checkTime,
     this.createdAt,
+    this.patient,
   });
 
   factory VitalSignModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +44,9 @@ class VitalSignModel {
           : null,
       checkTime: json['check_time'],
       createdAt: json['created_at'],
+      patient: json['patient'] != null
+          ? PatientDataModel.fromJson(json['patient'])
+          : null,
     );
   }
 

@@ -1,3 +1,5 @@
+import 'package:health_care_app/features/health/data/models/health_check_model.dart';
+
 class HealthAlertModel {
   final int? id;
   final int? healthCheckId;
@@ -5,6 +7,7 @@ class HealthAlertModel {
   final String? message;
   final String? sentStatus;
   final String? createdAt;
+  final HealthCheckModel? healthCheck;
 
   HealthAlertModel({
     this.id,
@@ -13,6 +16,7 @@ class HealthAlertModel {
     this.message,
     this.sentStatus,
     this.createdAt,
+    this.healthCheck,
   });
 
   factory HealthAlertModel.fromJson(Map<String, dynamic> json) {
@@ -21,8 +25,11 @@ class HealthAlertModel {
       healthCheckId: json['health_check_id'],
       alertLevel: json['alert_level'],
       message: json['message'],
-      sentStatus: json['sent_status'],
+      sentStatus: json['sent_status']?.toString(),
       createdAt: json['created_at'],
+      healthCheck: json['health_check'] != null
+          ? HealthCheckModel.fromJson(json['health_check'])
+          : null,
     );
   }
 

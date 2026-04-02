@@ -1,4 +1,5 @@
 import 'package:health_care_app/features/meal/data/models/meal_type_model.dart';
+import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 
 class MealScheduleModel {
   final int? id;
@@ -7,6 +8,7 @@ class MealScheduleModel {
   final String? mealTime;
   final String? notes;
   final MealTypeModel? mealType;
+  final PatientDataModel? patient;
   final String? createdAt;
 
   MealScheduleModel({
@@ -16,6 +18,7 @@ class MealScheduleModel {
     this.mealTime,
     this.notes,
     this.mealType,
+    this.patient,
     this.createdAt,
   });
 
@@ -32,6 +35,9 @@ class MealScheduleModel {
       notes: json['notes'],
       mealType: json['meal_type'] != null
           ? MealTypeModel.fromJson(json['meal_type'])
+          : null,
+      patient: json['patient'] != null
+          ? PatientDataModel.fromJson(json['patient'])
           : null,
       createdAt: json['created_at'],
     );

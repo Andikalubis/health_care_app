@@ -9,7 +9,8 @@ import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 
 class AddMedicineScheduleScreen extends StatefulWidget {
-  const AddMedicineScheduleScreen({super.key});
+  final MedicineScheduleModel? existing;
+  const AddMedicineScheduleScreen({super.key, this.existing});
 
   @override
   State<AddMedicineScheduleScreen> createState() =>
@@ -46,8 +47,33 @@ class _AddMedicineScheduleScreenState extends State<AddMedicineScheduleScreen> {
   @override
   void initState() {
     super.initState();
-    _startDateCtrl.text = _startDate.toIso8601String().split('T').first;
-    _updateTimeControllers();
+    if (widget.existing != null) {
+      final e = widget.existing!;
+      _selectedPatientId = e.patientId;
+      _selectedMedicineId = e.medicineId;
+      _signaFreq = e.signaFrequency ?? 1;
+      _mealRelation = e.mealRelation ?? 'none';
+      _dosageCtrl.text = e.dosage ?? '';
+      _dosePerIntakeCtrl.text = e.dosePerIntake?.toString() ?? '1';
+      _qtyTotalCtrl.text = e.qtyTotal?.toString() ?? '';
+      _notesCtrl.text = e.notes ?? '';
+      if (e.startDate != null) {
+        try {
+          _startDate = DateTime.parse(e.startDate!);
+        } catch (_) {}
+      }
+      _startDateCtrl.text = _startDate.toIso8601String().split('T').first;
+
+      List<String>? initTimes;
+      if (e.scheduleTimes != null && e.scheduleTimes!.isNotEmpty) {
+        initTimes = e.scheduleTimes!.map((t) => t.drinkTime ?? '').toList();
+      }
+      _updateTimeControllers(initTimes);
+      _calculateEndDate();
+    } else {
+      _startDateCtrl.text = _startDate.toIso8601String().split('T').first;
+      _updateTimeControllers();
+    }
 
     // Add listeners for auto-calculation
     _dosePerIntakeCtrl.addListener(_calculateEndDate);
@@ -56,9 +82,10 @@ class _AddMedicineScheduleScreenState extends State<AddMedicineScheduleScreen> {
     _loadData();
   }
 
-  void _updateTimeControllers() {
+  void _updateTimeControllers([List<String>? overrideTimes]) {
     // Save existing values if possible
-    List<String> oldTimes = _timeCtrls.map((c) => c.text).toList();
+    List<String> oldTimes =
+        overrideTimes ?? _timeCtrls.map((c) => c.text).toList();
 
     // Clear and rebuild controllers
     for (var ctrl in _timeCtrls) {
@@ -112,10 +139,10 @@ class _AddMedicineScheduleScreenState extends State<AddMedicineScheduleScreen> {
         setState(() {
           _patients = results[0] as List<PatientDataModel>;
           _medicines = results[1] as List<MedicineModel>;
-          if (_patients.isNotEmpty) {
+          if (_patients.isNotEmpty && _selectedPatientId == null) {
             _selectedPatientId = _patients.first.id;
           }
-          if (_medicines.isNotEmpty) {
+          if (_medicines.isNotEmpty && _selectedMedicineId == null) {
             _selectedMedicineId = _medicines.first.id;
           }
           _loadingData = false;
@@ -161,7 +188,11 @@ class _AddMedicineScheduleScreenState extends State<AddMedicineScheduleScreen> {
         scheduleTimes: times,
       );
 
-      await _api.storeMedicineSchedule(model);
+      if (widget.existing == null) {
+        await _api.storeMedicineSchedule(model);
+      } else {
+        await _api.updateMedicineSchedule(widget.existing!.id!, model);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -200,8 +231,11 @@ class _AddMedicineScheduleScreenState extends State<AddMedicineScheduleScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final isEdit = widget.existing != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Jadwal Obat')),
+      appBar: AppBar(
+        title: Text(isEdit ? 'Edit Jadwal Obat' : 'Tambah Jadwal Obat'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -494,8 +528,8 @@ class _AddMedicineScheduleScreenState extends State<AddMedicineScheduleScreen> {
                         width: 24,
                         child: CircularProgressIndicator(color: Colors.white),
                       )
-                    : const Text(
-                        'Simpan Jadwal Obat',
+                    : Text(
+                        isEdit ? 'Perbarui Jadwal Obat' : 'Simpan Jadwal Obat',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/services/reverb_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
+import 'package:health_care_app/features/medicine/presentation/pages/medicine_schedule_detail_screen.dart';
 import 'add_medicine_schedule_screen.dart';
 
 class MedicineScheduleListScreen extends StatefulWidget {
@@ -27,6 +29,23 @@ class _MedicineScheduleListScreenState
   void initState() {
     super.initState();
     _load();
+    _initRealtime();
+  }
+
+  void _initRealtime() async {
+    final realtime = ReverbService();
+    await realtime.init();
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId != null) {
+      realtime.subscribePrivate(
+        'patient.$userId',
+        'medicine.schedule.updated',
+        (_) {
+          Future.delayed(const Duration(seconds: 1), () => _load());
+        },
+      );
+    }
   }
 
   Future<void> _load() async {
@@ -121,110 +140,141 @@ class _MedicineScheduleListScreenState
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-              child: Icon(
-                Icons.medication,
-                color: theme.colorScheme.primary,
-                size: 28,
-              ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MedicineScheduleDetailScreen(schedule: item),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.medicine?.name ?? 'Obat #${item.medicineId}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  if (item.dosage != null)
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
+                child: Icon(
+                  Icons.medication,
+                  color: theme.colorScheme.primary,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      'Dosis: ${item.dosage}',
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                  if (item.scheduleTimes != null &&
-                      item.scheduleTimes!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Waktu Minum:',
-                      style: TextStyle(
-                        fontSize: 14,
+                      item.medicine?.name ?? 'Obat #${item.medicineId}',
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: item.scheduleTimes!.map((time) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.blue.shade200),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: Colors.blue,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                formatTime(time.drinkTime ?? ''),
-                                style: const TextStyle(
-                                  fontSize: 13,
+                    if (item.dosage != null)
+                      Text(
+                        'Dosis: ${item.dosage}',
+                        style: const TextStyle(fontSize: 15),
+                      ),
+                    if (item.scheduleTimes != null &&
+                        item.scheduleTimes!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Waktu Minum:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: item.scheduleTimes!.map((time) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.blue.shade200),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.access_time,
+                                  size: 14,
                                   color: Colors.blue,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Text(
+                                  formatTime(time.drinkTime ?? ''),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    if (item.startDate != null || item.endDate != null)
+                      Text(
+                        '${formatDateOnly(item.startDate)} s/d ${formatDateOnly(item.endDate)}',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    if (item.notes != null)
+                      Text(
+                        item.notes!,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (_userRole != 'admin')
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, color: Colors.blue),
+                      onPressed: () async {
+                        final ok = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AddMedicineScheduleScreen(existing: item),
                           ),
                         );
-                      }).toList(),
+                        if (ok == true) _load();
+                      },
                     ),
-                    const SizedBox(height: 8),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () => _confirmDelete(item.id!),
+                    ),
                   ],
-                  if (item.startDate != null || item.endDate != null)
-                    Text(
-                      '${formatDateOnly(item.startDate)} s/d ${formatDateOnly(item.endDate)}',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  if (item.notes != null)
-                    Text(
-                      item.notes!,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (_userRole != 'admin')
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                onPressed: () => _confirmDelete(item.id!),
-              ),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
     );

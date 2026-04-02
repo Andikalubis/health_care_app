@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/services/reverb_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
+import 'package:health_care_app/features/health/presentation/pages/vital_sign_detail_screen.dart';
 import 'add_vital_sign_screen.dart';
 
 class VitalSignListScreen extends StatefulWidget {
@@ -25,6 +27,19 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
   void initState() {
     super.initState();
     _load();
+    _initRealtime();
+  }
+
+  void _initRealtime() async {
+    final realtime = ReverbService();
+    await realtime.init();
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId != null) {
+      realtime.subscribePrivate('patient.$userId', 'vital.updated', (_) {
+        Future.delayed(const Duration(seconds: 1), () => _load());
+      });
+    }
   }
 
   Future<void> _load() async {
@@ -156,60 +171,95 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  formatDateTimeShort(item.checkTime ?? item.createdAt),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VitalSignDetailScreen(vital: item),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    formatDateTimeShort(item.checkTime ?? item.createdAt),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                if (_userRole != 'admin')
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _confirmDelete(item.id!),
-                  ),
-              ],
-            ),
-            const Divider(),
-            _row(
-              Icons.favorite,
-              'Detak Jantung',
-              '${item.heartRate ?? '-'} BPM',
-              Colors.redAccent,
-            ),
-            _row(
-              Icons.speed,
-              'Tekanan Darah',
-              item.bloodPressure ?? '-',
-              Colors.blueAccent,
-            ),
-            _row(
-              Icons.thermostat,
-              'Suhu Tubuh',
-              '${item.bodyTemperature ?? '-'} °C',
-              Colors.orange,
-            ),
-            _row(
-              Icons.air,
-              'Laju Pernapasan',
-              '${item.breathingRate ?? '-'} /menit',
-              Colors.teal,
-            ),
-            _row(
-              Icons.bloodtype,
-              'Saturasi O₂',
-              '${item.oxygenLevel ?? '-'}%',
-              Colors.purple,
-            ),
-          ],
+                  if (_userRole != 'admin')
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: Colors.blue,
+                          ),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    AddVitalSignScreen(existing: item),
+                              ),
+                            );
+                            if (result == true) _load();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
+                          onPressed: () => _confirmDelete(item.id!),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+              const Divider(),
+              _row(
+                Icons.favorite,
+                'Detak Jantung',
+                '${item.heartRate ?? '-'} BPM',
+                Colors.redAccent,
+              ),
+              _row(
+                Icons.speed,
+                'Tekanan Darah',
+                item.bloodPressure ?? '-',
+                Colors.blueAccent,
+              ),
+              _row(
+                Icons.thermostat,
+                'Suhu Tubuh',
+                '${item.bodyTemperature ?? '-'} °C',
+                Colors.orange,
+              ),
+              _row(
+                Icons.air,
+                'Laju Pernapasan',
+                '${item.breathingRate ?? '-'} /menit',
+                Colors.teal,
+              ),
+              _row(
+                Icons.bloodtype,
+                'Saturasi O₂',
+                '${item.oxygenLevel ?? '-'}%',
+                Colors.purple,
+              ),
+            ],
+          ),
         ),
       ),
     );

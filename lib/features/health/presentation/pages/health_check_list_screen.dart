@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/services/reverb_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/health/data/models/health_check_model.dart';
+import 'package:health_care_app/features/health/presentation/pages/health_check_detail_screen.dart';
 import 'add_health_check_screen.dart';
 
 class HealthCheckListScreen extends StatefulWidget {
@@ -25,6 +27,19 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
   void initState() {
     super.initState();
     _load();
+    _initRealtime();
+  }
+
+  void _initRealtime() async {
+    final realtime = ReverbService();
+    await realtime.init();
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId != null) {
+      realtime.subscribePrivate('patient.$userId', 'health.check.updated', (_) {
+        Future.delayed(const Duration(seconds: 1), () => _load());
+      });
+    }
   }
 
   Future<void> _load() async {
@@ -197,16 +212,47 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
               ),
             ),
             if (_userRole != 'admin')
-              IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: Colors.red,
-                  size: 20,
-                ),
-                onPressed: () => _confirmDelete(item.id!),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                    onPressed: () async {
+                      final ok = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddHealthCheckScreen(existing: item),
+                        ),
+                      );
+                      if (ok == true) _load();
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                    onPressed: () => _confirmDelete(item.id!),
+                  ),
+                ],
               ),
           ],
         ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  HealthCheckDetailScreen(check: item, userRole: _userRole),
+            ),
+          );
+          _load(); // Refresh just in case it was edited and popped
+        },
       ),
     );
   }

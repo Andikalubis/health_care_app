@@ -7,7 +7,8 @@ import 'package:health_care_app/features/patient/data/models/patient_data_model.
 import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 
 class AddHealthCheckScreen extends StatefulWidget {
-  const AddHealthCheckScreen({super.key});
+  final HealthCheckModel? existing;
+  const AddHealthCheckScreen({super.key, this.existing});
 
   @override
   State<AddHealthCheckScreen> createState() => _AddHealthCheckScreenState();
@@ -31,8 +32,17 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
   @override
   void initState() {
     super.initState();
-    // Default to now so the field shows a value on open
-    _checkTimeCtrl.text = DateTime.now().toIso8601String().substring(0, 19);
+    if (widget.existing != null) {
+      final e = widget.existing!;
+      _valueCtrl.text = e.resultValue?.toString() ?? '';
+      _notesCtrl.text = e.notes ?? '';
+      _checkTimeCtrl.text =
+          e.checkTime ?? DateTime.now().toIso8601String().substring(0, 19);
+      _selectedPatientId = e.patientId;
+      _selectedHealthTypeId = e.healthTypeId;
+    } else {
+      _checkTimeCtrl.text = DateTime.now().toIso8601String().substring(0, 19);
+    }
     _loadData();
   }
 
@@ -48,9 +58,12 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
           _patients = results[0] as List<PatientDataModel>;
           _healthTypes = results[1] as List<HealthTypeModel>;
           _limits = results[2] as List<HealthLimitModel>;
-          if (_patients.isNotEmpty) _selectedPatientId = _patients.first.id;
-          if (_healthTypes.isNotEmpty) {
-            _selectedHealthTypeId = _healthTypes.first.id;
+          if (widget.existing == null) {
+            if (_patients.isNotEmpty && _selectedPatientId == null)
+              _selectedPatientId = _patients.first.id;
+            if (_healthTypes.isNotEmpty && _selectedHealthTypeId == null) {
+              _selectedHealthTypeId = _healthTypes.first.id;
+            }
           }
           _loadingData = false;
         });
@@ -95,7 +108,11 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
         checkTime: _checkTimeCtrl.text.trim(),
       );
-      await _api.storeHealthCheck(model);
+      if (widget.existing == null) {
+        await _api.storeHealthCheck(model);
+      } else {
+        await _api.updateHealthCheck(widget.existing!.id!, model);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -117,8 +134,11 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEdit = widget.existing != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Pemeriksaan')),
+      appBar: AppBar(
+        title: Text(isEdit ? 'Edit Pemeriksaan' : 'Tambah Pemeriksaan'),
+      ),
       body: _loadingData
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -211,7 +231,11 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Simpan Pemeriksaan'),
+                          : Text(
+                              isEdit
+                                  ? 'Perbarui Pemeriksaan'
+                                  : 'Simpan Pemeriksaan',
+                            ),
                     ),
                   ],
                 ),

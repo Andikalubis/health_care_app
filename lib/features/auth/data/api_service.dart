@@ -5,6 +5,7 @@ import 'package:health_care_app/features/health/data/health_api.dart';
 import 'package:health_care_app/features/medicine/data/medicine_api.dart';
 import 'package:health_care_app/features/meal/data/meal_api.dart';
 import 'package:health_care_app/features/notification/data/notification_api.dart';
+import 'package:health_care_app/features/telegram/data/telegram_api.dart';
 
 class ApiService extends BaseApi
     with
@@ -13,4 +14,5 @@ class ApiService extends BaseApi
         HealthApi,
         MedicineApi,
         MealApi,
+        TelegramApi,
         NotificationApi {}

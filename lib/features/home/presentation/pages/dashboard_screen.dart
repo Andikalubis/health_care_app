@@ -12,7 +12,9 @@ import 'package:health_care_app/features/notification/presentation/pages/notific
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_today_screen.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
+import 'package:health_care_app/core/services/reverb_service.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,6 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<MedicineScheduleModel> _todayMeds = [];
   bool _loadingVital = true;
   bool _loadingMeds = true;
+  int _unreadCount = 0;
 
   @override
   void initState() {
@@ -46,6 +49,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _userName = prefs.getString('user_name') ?? 'Tamu';
         _userRole = prefs.getString('user_role') ?? 'user';
       });
+      _initRealtime(prefs.getInt('user_id'), _userRole);
+    }
+  }
+
+  void _initRealtime(int? userId, String role) async {
+    final realtime = ReverbService();
+    await realtime.init();
+
+    if (userId != null) {
+      // Subscribe to patient specific updates
+      realtime.subscribePrivate('patient.$userId', 'vital.updated', (_) {
+        if (kDebugMode) print('Dashboard: Vital updated, refreshing...');
+        _loadDashboardData();
+      });
+      realtime.subscribePrivate(
+        'patient.$userId',
+        'medicine.schedule.updated',
+        (_) {
+          if (kDebugMode)
+            print('Dashboard: Med schedule updated, refreshing...');
+          _loadDashboardData();
+        },
+      );
+      realtime.subscribePrivate('patient.$userId', 'meal.schedule.updated', (
+        _,
+      ) {
+        if (kDebugMode)
+          print('Dashboard: Meal schedule updated, refreshing...');
+        _loadDashboardData();
+      });
+      realtime.subscribePrivate('patient.$userId', 'health.check.updated', (_) {
+        if (kDebugMode) print('Dashboard: Health check updated, refreshing...');
+        _loadDashboardData();
+      });
+      realtime.subscribePrivate('patient.$userId', 'medicine.stock.updated', (
+        _,
+      ) {
+        if (kDebugMode) print('Dashboard: Stock updated, refreshing...');
+        _loadDashboardData();
+      });
+
+      // Subscribe to user notifications
+      realtime.subscribePrivate('user.$userId', 'notification.created', (_) {
+        if (kDebugMode) print('Dashboard: New notification received!');
+        _loadDashboardData(); // Refresh everything including unread count
+      });
+    }
+
+    if (role == 'admin') {
+      realtime.subscribePrivate(
+        'admin.dashboard',
+        'vital.updated',
+        (_) => _loadDashboardData(),
+      );
+      realtime.subscribePrivate(
+        'admin.dashboard',
+        'medicine.stock.updated',
+        (_) => _loadDashboardData(),
+      );
+      realtime.subscribePrivate(
+        'admin.dashboard',
+        'medicine.schedule.updated',
+        (_) => _loadDashboardData(),
+      );
+      realtime.subscribePrivate(
+        'admin.dashboard',
+        'meal.schedule.updated',
+        (_) => _loadDashboardData(),
+      );
+      realtime.subscribePrivate(
+        'admin.dashboard',
+        'health.check.updated',
+        (_) => _loadDashboardData(),
+      );
     }
   }
 
@@ -78,9 +155,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) setState(() => _loadingMeds = false);
     }
 
-    // Load and schedule today's notifications
+    // Load and schedule today's notifications (Now handled by Backend for persistence)
     if (_userRole != 'admin') {
-      _loadTodayDosesAndSchedule();
+      // _loadTodayDosesAndSchedule();
+      // _loadTodayMealsAndSchedule();
+
+      // Load unread notification count
+      try {
+        final count = await _api.getUnreadNotificationCount();
+        if (mounted) setState(() => _unreadCount = count);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _loadTodayMealsAndSchedule() async {
+    try {
+      final meals = await _api.getTodayMeals();
+      final notificationService = LocalNotificationService();
+
+      for (var meal in meals) {
+        if (meal.mealTime != null) {
+          // Parse time and combine with today's date
+          final now = DateTime.now();
+          final timeParts = meal.mealTime!.split(':');
+          final scheduledTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            int.parse(timeParts[0]),
+            int.parse(timeParts[1]),
+            timeParts.length > 2 ? int.parse(timeParts[2]) : 0,
+          );
+
+          if (scheduledTime.isAfter(now)) {
+            // Unique ID for meal notification: 20000 + mealId
+            int notificationId = 20000 + (meal.id ?? 0);
+
+            await notificationService.scheduleNotification(
+              id: notificationId,
+              title: 'Waktunya Makan!',
+              body: 'Jadwal makan: ${meal.mealType?.name ?? "Makan"}',
+              scheduledTime: scheduledTime,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode)
+        print('Dashboard: Error scheduling meal notifications: $e');
     }
   }
 
@@ -301,24 +423,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         GestureDetector(
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const NotificationListScreen()),
             );
+            _loadDashboardData(); // Refresh count when coming back
           },
-          child: Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.notifications_none_rounded,
-              size: 30,
-              color: theme.colorScheme.primary,
-            ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.notifications_none_rounded,
+                  size: 30,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              if (_unreadCount > 0)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 22,
+                      minHeight: 22,
+                    ),
+                    child: Text(
+                      _unreadCount > 99 ? '99+' : '$_unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ],

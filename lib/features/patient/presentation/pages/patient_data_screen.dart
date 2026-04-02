@@ -4,6 +4,7 @@ import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
+import 'package:health_care_app/features/patient/presentation/pages/patient_detail_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PatientDataScreen extends StatefulWidget {
@@ -63,6 +64,43 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
     }
   }
 
+  Future<void> _delete(int id) async {
+    try {
+      await _api.deletePatientData(id);
+      _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menghapus: $e')));
+      }
+    }
+  }
+
+  void _confirmDelete(int id) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Hapus Pasien?'),
+        content: const Text('Data pasien ini akan dihapus permanen.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(context);
+              _delete(id);
+            },
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -99,9 +137,44 @@ class _PatientDataScreenState extends State<PatientDataScreen> {
                     subtitle: Text(
                       '${p.gender == 'male' ? 'Laki-laki' : 'Perempuan'} • ${p.birthDate}',
                     ),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: Colors.blue,
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => Scaffold(
+                                  appBar: AppBar(
+                                    title: const Text('Edit Pasien'),
+                                  ),
+                                  body: _buildAddForm(theme, p),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
+                          onPressed: () => _confirmDelete(p.id!),
+                        ),
+                      ],
+                    ),
                     onTap: () {
-                      // Navigate to patient detail (to be implemented)
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PatientDetailScreen(patient: p),
+                        ),
+                      );
                     },
                   ),
                 );
@@ -156,6 +229,8 @@ class _PatientDataFormState extends State<_PatientDataForm> {
   final _birthCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
+  final _noTlpCtrl = TextEditingController();
+  final _telegramCtrl = TextEditingController();
 
   String _gender = 'male';
   String? _bloodType;
@@ -187,6 +262,8 @@ class _PatientDataFormState extends State<_PatientDataForm> {
       _heightCtrl.text = e.height?.toString() ?? '';
       _weightCtrl.text = e.weight?.toString() ?? '';
       _bloodType = e.bloodType;
+      _noTlpCtrl.text = e.noTlp ?? '';
+      _telegramCtrl.text = e.telegramId ?? '';
     }
   }
 
@@ -196,6 +273,8 @@ class _PatientDataFormState extends State<_PatientDataForm> {
     _birthCtrl.dispose();
     _heightCtrl.dispose();
     _weightCtrl.dispose();
+    _noTlpCtrl.dispose();
+    _telegramCtrl.dispose();
     super.dispose();
   }
 
@@ -214,6 +293,10 @@ class _PatientDataFormState extends State<_PatientDataForm> {
         height: double.tryParse(_heightCtrl.text.trim()),
         weight: double.tryParse(_weightCtrl.text.trim()),
         bloodType: _bloodType,
+        noTlp: _noTlpCtrl.text.trim().isEmpty ? null : _noTlpCtrl.text.trim(),
+        telegramId: _telegramCtrl.text.trim().isEmpty
+            ? null
+            : _telegramCtrl.text.trim(),
       );
       if (widget.existing != null) {
         await _api.updatePatientData(widget.existing!.id!, model);
@@ -325,6 +408,23 @@ class _PatientDataFormState extends State<_PatientDataForm> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _noTlpCtrl,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'No. Telepon / WhatsApp',
+                prefixIcon: Icon(Icons.phone),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _telegramCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Telegram ID (Opsional)',
+                prefixIcon: Icon(Icons.telegram),
+              ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(

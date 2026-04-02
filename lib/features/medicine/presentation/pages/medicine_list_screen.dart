@@ -3,6 +3,7 @@ import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_model.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_form_screen.dart';
+import 'package:health_care_app/features/medicine/presentation/pages/medicine_detail_screen.dart';
 
 class MedicineListScreen extends StatefulWidget {
   const MedicineListScreen({super.key});
@@ -150,6 +151,14 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             ),
           ],
         ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MedicineDetailScreen(medicine: item),
+            ),
+          );
+        },
       ),
     );
   }
