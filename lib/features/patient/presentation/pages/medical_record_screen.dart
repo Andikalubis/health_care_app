@@ -3,6 +3,8 @@ import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/health/data/models/health_check_model.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
+import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
+import 'package:health_care_app/core/services/medical_record_pdf_service.dart';
 
 class MedicalRecordScreen extends StatefulWidget {
   final int patientId;
@@ -25,6 +27,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
 
   List<VitalSignModel> _vitalSigns = [];
   List<HealthCheckModel> _healthChecks = [];
+  PatientDataModel? _patientData;
 
   @override
   void initState() {
@@ -55,6 +58,16 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
           _isLoading = false;
         });
       }
+
+      // Load patient data concurrently or sequentially to avoid blocking UI early
+      final patients = await _api.getPatientData();
+      if (mounted) {
+        setState(() {
+          try {
+            _patientData = patients.firstWhere((p) => p.id == widget.patientId);
+          } catch (_) {} // Handle case if patient is not found
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -65,12 +78,27 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
     }
   }
 
+  Future<void> _printPdf() async {
+    final pdfService = MedicalRecordPdfService();
+    await pdfService.printMedicalRecord(
+      patientName: widget.patientName,
+      patientData: _patientData,
+      vitalSigns: _vitalSigns,
+      healthChecks: _healthChecks,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Rekam Medis: ${widget.patientName}'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Cetak PDF',
+            onPressed: _isLoading || _error != null ? null : _printPdf,
+          ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
       ),

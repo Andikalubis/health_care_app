@@ -168,81 +168,8 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.15),
-          child: Icon(_statusIcon(item.status), color: color),
-        ),
-        title: Text(
-          item.healthType?.name ?? 'Pemeriksaan #${item.id}',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hasil: ${item.resultValue ?? '-'} ${item.healthType?.unit ?? ''}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            if (item.notes != null)
-              Text(item.notes!, style: TextStyle(color: Colors.grey.shade600)),
-            Text(
-              formatDateTimeShort(item.checkTime ?? item.createdAt),
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-            ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _statusLabel(item.status),
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            if (_userRole != 'admin')
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.edit_outlined,
-                      color: Colors.blue,
-                      size: 20,
-                    ),
-                    onPressed: () async {
-                      final ok = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AddHealthCheckScreen(existing: item),
-                        ),
-                      );
-                      if (ok == true) _load();
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                    onPressed: () => _confirmDelete(item.id!),
-                  ),
-                ],
-              ),
-          ],
-        ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () async {
           await Navigator.push(
             context,
@@ -251,8 +178,120 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
                   HealthCheckDetailScreen(check: item, userRole: _userRole),
             ),
           );
-          _load(); // Refresh just in case it was edited and popped
+          _load();
         },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withValues(alpha: 0.15),
+                child: Icon(_statusIcon(item.status), color: color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.healthType?.name ?? 'Pemeriksaan #${item.id}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _statusLabel(item.status),
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Hasil: ${item.resultValue ?? '-'} ${item.healthType?.unit ?? ''}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    if (item.notes != null && item.notes!.isNotEmpty)
+                      Text(
+                        item.notes!,
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            formatDateTimeShort(
+                              item.checkTime ?? item.createdAt,
+                            ),
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        if (_userRole != 'admin') ...[
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                color: Colors.blue,
+                                size: 18,
+                              ),
+                              onPressed: () async {
+                                final ok = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        AddHealthCheckScreen(existing: item),
+                                  ),
+                                );
+                                if (ok == true) _load();
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              onPressed: () => _confirmDelete(item.id!),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
