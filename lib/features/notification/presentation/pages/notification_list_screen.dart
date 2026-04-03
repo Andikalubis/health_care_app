@@ -3,6 +3,7 @@ import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/notification/data/models/notification_model.dart';
+import 'package:health_care_app/features/notification/presentation/pages/notification_detail_screen.dart';
 
 class NotificationListScreen extends StatefulWidget {
   const NotificationListScreen({super.key});
@@ -59,6 +60,20 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     }
   }
 
+  Future<void> _markAsRead(int id) async {
+    try {
+      await _api.markAsRead(id);
+      _load();
+    } catch (_) {}
+  }
+
+  Future<void> _markAllAsRead() async {
+    try {
+      await _api.markAllAsRead();
+      _load();
+    } catch (_) {}
+  }
+
   IconData _typeIcon(String? type) {
     switch (type) {
       case 'alert':
@@ -90,6 +105,12 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       appBar: AppBar(
         title: const Text('Notifikasi'),
         actions: [
+          if (_items.any((e) => e.isRead == false))
+            IconButton(
+              icon: const Icon(Icons.done_all),
+              tooltip: 'Tandai semua dibaca',
+              onPressed: _markAllAsRead,
+            ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
       ),
@@ -112,34 +133,83 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
 
   Widget _buildCard(NotificationModel item, ThemeData theme) {
     final color = _typeColor(item.notificationType);
+    final isUnread = item.isRead == false;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.12),
-          child: Icon(_typeIcon(item.notificationType), color: color),
-        ),
-        title: Text(
-          item.title ?? 'Notifikasi',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (item.message != null)
-              Text(item.message!, style: const TextStyle(fontSize: 15)),
-            const SizedBox(height: 4),
-            Text(
-              formatDateTimeShort(item.sendTime ?? item.createdAt),
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+      color: isUnread
+          ? theme.colorScheme.primary.withValues(alpha: 0.05)
+          : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: isUnread
+            ? BorderSide(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              )
+            : BorderSide.none,
+      ),
+      child: InkWell(
+        onTap: () {
+          if (isUnread) _markAsRead(item.id!);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NotificationDetailScreen(notification: item),
             ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-          onPressed: () => _delete(item.id!),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          leading: Stack(
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withValues(alpha: 0.12),
+                child: Icon(_typeIcon(item.notificationType), color: color),
+              ),
+              if (isUnread)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          title: Text(
+            item.title ?? 'Notifikasi',
+            style: TextStyle(
+              fontWeight: isUnread ? FontWeight.w900 : FontWeight.bold,
+              fontSize: 16,
+              color: isUnread ? theme.colorScheme.primary : null,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (item.message != null)
+                Text(item.message!, style: const TextStyle(fontSize: 15)),
+              const SizedBox(height: 4),
+              Text(
+                formatDateTimeShort(item.sendTime ?? item.createdAt),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+              ),
+            ],
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+            onPressed: () => _delete(item.id!),
+          ),
         ),
       ),
     );

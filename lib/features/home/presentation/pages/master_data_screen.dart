@@ -5,6 +5,8 @@ import 'package:health_care_app/features/meal/presentation/pages/meal_type_list_
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_list_screen.dart';
 import 'package:health_care_app/features/health/presentation/pages/health_limit_list_screen.dart';
 import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
+
+import 'package:health_care_app/features/telegram/presentation/pages/telegram_user_list_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MasterDataScreen extends StatefulWidget {
@@ -120,7 +122,7 @@ class _MasterDataScreenState extends State<MasterDataScreen> {
                     );
                   },
                 ),
-                if (_userRole == 'admin')
+                if (_userRole == 'admin') ...[
                   _buildMasterItem(
                     theme,
                     title: 'Daftar Pasien',
@@ -135,6 +137,22 @@ class _MasterDataScreenState extends State<MasterDataScreen> {
                       );
                     },
                   ),
+
+                  _buildMasterItem(
+                    theme,
+                    title: 'Sinkronisasi Telegram',
+                    subtitle: 'Kelola koneksi notifikasi Telegram bot',
+                    icon: Icons.telegram,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TelegramUserListScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
           ),

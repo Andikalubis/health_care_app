@@ -3,7 +3,6 @@ import 'package:health_care_app/features/health/data/models/vital_sign_model.dar
 import 'package:health_care_app/features/health/data/models/health_type_model.dart';
 import 'package:health_care_app/features/health/data/models/health_check_model.dart';
 import 'package:health_care_app/features/health/data/models/health_limit_model.dart';
-import 'package:health_care_app/features/health/data/models/health_alert_model.dart';
 
 mixin HealthApi on BaseApi {
   // ─── VITAL SIGNS ──────────────────────────────────────────
@@ -97,16 +96,5 @@ mixin HealthApi on BaseApi {
 
   Future<void> deleteHealthLimit(int id) async {
     await dio.delete('/health-limits/$id');
-  }
-
-  // ─── HEALTH ALERTS ────────────────────────────────────────
-  Future<List<HealthAlertModel>> getHealthAlerts() async {
-    final res = await dio.get('/health-alerts');
-    final data = unwrap(res);
-    return (data as List).map((e) => HealthAlertModel.fromJson(e)).toList();
-  }
-
-  Future<void> deleteHealthAlert(int id) async {
-    await dio.delete('/health-alerts/$id');
   }
 }

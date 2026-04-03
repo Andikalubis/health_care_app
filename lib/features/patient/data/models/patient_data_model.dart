@@ -7,6 +7,8 @@ class PatientDataModel {
   final double? height;
   final double? weight;
   final String? bloodType;
+  final String? noTlp;
+  final String? telegramId;
 
   PatientDataModel({
     this.id,
@@ -17,6 +19,8 @@ class PatientDataModel {
     this.height,
     this.weight,
     this.bloodType,
+    this.noTlp,
+    this.telegramId,
   });
 
   factory PatientDataModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,8 @@ class PatientDataModel {
           ? double.tryParse(json['weight'].toString())
           : null,
       bloodType: json['blood_type'],
+      noTlp: json['no_tlp'],
+      telegramId: json['telegram_id'],
     );
   }
 
@@ -47,6 +53,8 @@ class PatientDataModel {
       if (height != null) 'height': height,
       if (weight != null) 'weight': weight,
       if (bloodType != null) 'blood_type': bloodType,
+      if (noTlp != null) 'no_tlp': noTlp,
+      if (telegramId != null) 'telegram_id': telegramId,
     };
   }
 }

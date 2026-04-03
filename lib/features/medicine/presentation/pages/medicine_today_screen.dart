@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
+import 'package:health_care_app/core/services/reverb_service.dart';
+import 'package:health_care_app/features/medicine/presentation/pages/medicine_history_list_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MedicineTodayScreen extends StatefulWidget {
   const MedicineTodayScreen({super.key});
@@ -20,6 +23,28 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
   void initState() {
     super.initState();
     _load();
+    _initRealtime();
+  }
+
+  void _initRealtime() async {
+    final realtime = ReverbService();
+    await realtime.init();
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId != null) {
+      realtime.subscribePrivate(
+        'patient.$userId',
+        'medicine.schedule.updated',
+        (_) {
+          Future.delayed(const Duration(seconds: 1), () => _load());
+        },
+      );
+      realtime.subscribePrivate('patient.$userId', 'medicine.stock.updated', (
+        _,
+      ) {
+        Future.delayed(const Duration(seconds: 1), () => _load());
+      });
+    }
   }
 
   Future<void> _load() async {
@@ -110,6 +135,18 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
       appBar: AppBar(
         title: const Text('Jadwal Hari Ini'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Riwayat Minum Obat',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const MedicineHistoryListScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
       ),

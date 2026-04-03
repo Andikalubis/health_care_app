@@ -47,4 +47,10 @@ mixin MealApi on BaseApi {
   Future<void> deleteMealSchedule(int id) async {
     await dio.delete('/meal-schedules/$id');
   }
+
+  Future<List<MealScheduleModel>> getTodayMeals() async {
+    final res = await dio.get('/meal-schedules/today');
+    final data = unwrap(res);
+    return (data as List).map((e) => MealScheduleModel.fromJson(e)).toList();
+  }
 }

@@ -85,6 +85,14 @@ mixin MedicineApi on BaseApi {
     return MedicineHistoryModel.fromJson(unwrap(res));
   }
 
+  Future<MedicineHistoryModel> updateMedicineHistory(
+    int id,
+    MedicineHistoryModel model,
+  ) async {
+    final res = await dio.put('/medicine-histories/$id', data: model.toJson());
+    return MedicineHistoryModel.fromJson(unwrap(res));
+  }
+
   Future<void> deleteMedicineHistory(int id) async {
     await dio.delete('/medicine-histories/$id');
   }

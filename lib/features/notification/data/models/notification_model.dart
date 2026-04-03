@@ -5,6 +5,9 @@ class NotificationModel {
   final String? message;
   final String? notificationType;
   final String? sendTime;
+  final bool? isRead;
+  final int? relatedId;
+  final String? relatedType;
   final String? createdAt;
 
   NotificationModel({
@@ -14,6 +17,9 @@ class NotificationModel {
     this.message,
     this.notificationType,
     this.sendTime,
+    this.isRead,
+    this.relatedId,
+    this.relatedType,
     this.createdAt,
   });
 
@@ -25,6 +31,9 @@ class NotificationModel {
       message: json['message'],
       notificationType: json['notification_type'],
       sendTime: json['send_time'],
+      isRead: json['is_read'] == 1 || json['is_read'] == true,
+      relatedId: json['related_id'],
+      relatedType: json['related_type'],
       createdAt: json['created_at'],
     );
   }
@@ -36,6 +45,9 @@ class NotificationModel {
       if (message != null) 'message': message,
       if (notificationType != null) 'notification_type': notificationType,
       if (sendTime != null) 'send_time': sendTime,
+      if (isRead != null) 'is_read': isRead,
+      if (relatedId != null) 'related_id': relatedId,
+      if (relatedType != null) 'related_type': relatedType,
     };
   }
 }

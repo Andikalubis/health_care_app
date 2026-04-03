@@ -27,4 +27,14 @@ mixin PatientApi on BaseApi {
   Future<void> deletePatientData(int id) async {
     await dio.delete('/patient-data/$id');
   }
+
+  // ─── MEDICAL RECORDS ─────────────────────────────────────────
+  Future<Map<String, dynamic>> getMedicalRecord(int patientId) async {
+    final res = await dio.get('/medical-records/$patientId');
+    return unwrap(res) as Map<String, dynamic>;
+  }
+
+  Future<void> storeMedicalRecord(Map<String, dynamic> data) async {
+    await dio.post('/medical-records', data: data);
+  }
 }

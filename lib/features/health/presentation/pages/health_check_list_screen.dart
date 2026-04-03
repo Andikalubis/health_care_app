@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/services/reverb_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/health/data/models/health_check_model.dart';
+import 'package:health_care_app/features/health/presentation/pages/health_check_detail_screen.dart';
 import 'add_health_check_screen.dart';
 
 class HealthCheckListScreen extends StatefulWidget {
@@ -25,6 +27,19 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
   void initState() {
     super.initState();
     _load();
+    _initRealtime();
+  }
+
+  void _initRealtime() async {
+    final realtime = ReverbService();
+    await realtime.init();
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('user_id');
+    if (userId != null) {
+      realtime.subscribePrivate('patient.$userId', 'health.check.updated', (_) {
+        Future.delayed(const Duration(seconds: 1), () => _load());
+      });
+    }
   }
 
   Future<void> _load() async {
@@ -153,59 +168,129 @@ class _HealthCheckListScreenState extends State<HealthCheckListScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.15),
-          child: Icon(_statusIcon(item.status), color: color),
-        ),
-        title: Text(
-          item.healthType?.name ?? 'Pemeriksaan #${item.id}',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hasil: ${item.resultValue ?? '-'} ${item.healthType?.unit ?? ''}',
-              style: const TextStyle(fontSize: 16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  HealthCheckDetailScreen(check: item, userRole: _userRole),
             ),
-            if (item.notes != null)
-              Text(item.notes!, style: TextStyle(color: Colors.grey.shade600)),
-            Text(
-              formatDateTimeShort(item.checkTime ?? item.createdAt),
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-            ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+          );
+          _load();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: color.withValues(alpha: 0.15),
+                child: Icon(_statusIcon(item.status), color: color),
               ),
-              child: Text(
-                _statusLabel(item.status),
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.healthType?.name ?? 'Pemeriksaan #${item.id}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _statusLabel(item.status),
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Hasil: ${item.resultValue ?? '-'} ${item.healthType?.unit ?? ''}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    if (item.notes != null && item.notes!.isNotEmpty)
+                      Text(
+                        item.notes!,
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            formatDateTimeShort(
+                              item.checkTime ?? item.createdAt,
+                            ),
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        if (_userRole != 'admin') ...[
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.edit_outlined,
+                                color: Colors.blue,
+                                size: 18,
+                              ),
+                              onPressed: () async {
+                                final ok = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        AddHealthCheckScreen(existing: item),
+                                  ),
+                                );
+                                if (ok == true) _load();
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              onPressed: () => _confirmDelete(item.id!),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
-            if (_userRole != 'admin')
-              IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: Colors.red,
-                  size: 20,
-                ),
-                onPressed: () => _confirmDelete(item.id!),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

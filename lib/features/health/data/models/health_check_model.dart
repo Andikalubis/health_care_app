@@ -1,4 +1,5 @@
 import 'package:health_care_app/features/health/data/models/health_type_model.dart';
+import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 
 class HealthCheckModel {
   final int? id;
@@ -10,6 +11,7 @@ class HealthCheckModel {
   final String? checkTime;
   final String? createdAt;
   final HealthTypeModel? healthType;
+  final PatientDataModel? patient;
 
   HealthCheckModel({
     this.id,
@@ -21,6 +23,7 @@ class HealthCheckModel {
     this.checkTime,
     this.createdAt,
     this.healthType,
+    this.patient,
   });
 
   factory HealthCheckModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +44,9 @@ class HealthCheckModel {
       createdAt: json['created_at'],
       healthType: json['health_type'] != null
           ? HealthTypeModel.fromJson(json['health_type'])
+          : null,
+      patient: json['patient'] != null
+          ? PatientDataModel.fromJson(json['patient'])
           : null,
     );
   }
