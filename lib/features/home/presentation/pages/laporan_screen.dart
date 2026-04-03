@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/health/presentation/pages/health_check_list_screen.dart';
 import 'package:health_care_app/features/health/presentation/pages/vital_sign_list_screen.dart';
-import 'package:health_care_app/features/health/presentation/pages/health_alert_list_screen.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:health_care_app/features/patient/presentation/pages/medical_record_screen.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
@@ -45,7 +44,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: SafeArea(
         child: Column(
           children: [
@@ -82,7 +81,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
               tabs: const [
                 Tab(icon: Icon(Icons.monitor_heart), text: 'Tanda Vital'),
                 Tab(icon: Icon(Icons.health_and_safety), text: 'Pemeriksaan'),
-                Tab(icon: Icon(Icons.warning_amber), text: 'Peringatan'),
               ],
             ),
             const Expanded(
@@ -90,7 +88,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
                 children: [
                   VitalSignListScreen(showAppBar: false),
                   HealthCheckListScreen(showAppBar: false),
-                  HealthAlertListScreen(showAppBar: false),
                 ],
               ),
             ),

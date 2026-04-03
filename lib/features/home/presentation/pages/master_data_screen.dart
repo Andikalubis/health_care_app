@@ -5,7 +5,7 @@ import 'package:health_care_app/features/meal/presentation/pages/meal_type_list_
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_list_screen.dart';
 import 'package:health_care_app/features/health/presentation/pages/health_limit_list_screen.dart';
 import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
-import 'package:health_care_app/features/health/presentation/pages/health_alert_list_screen.dart';
+
 import 'package:health_care_app/features/telegram/presentation/pages/telegram_user_list_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -137,20 +137,7 @@ class _MasterDataScreenState extends State<MasterDataScreen> {
                       );
                     },
                   ),
-                  _buildMasterItem(
-                    theme,
-                    title: 'Peringatan Kesehatan',
-                    subtitle: 'Monitoring waspada seluruh pasien',
-                    icon: Icons.monitor_heart_outlined,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const HealthAlertListScreen(),
-                        ),
-                      );
-                    },
-                  ),
+
                   _buildMasterItem(
                     theme,
                     title: 'Sinkronisasi Telegram',

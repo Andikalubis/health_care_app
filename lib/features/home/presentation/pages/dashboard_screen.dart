@@ -6,6 +6,8 @@ import 'package:health_care_app/features/home/presentation/pages/laporan_screen.
 import 'package:health_care_app/features/profile/presentation/pages/profile_screen.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
+import 'package:health_care_app/features/meal/data/models/meal_schedule_model.dart';
+import 'package:health_care_app/features/meal/presentation/pages/meal_schedule_list_screen.dart';
 import 'package:health_care_app/features/patient/presentation/pages/patient_data_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/master_data_screen.dart';
 import 'package:health_care_app/features/notification/presentation/pages/notification_list_screen.dart';
@@ -31,8 +33,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   VitalSignModel? _latestVital;
   List<MedicineScheduleModel> _todayMeds = [];
+  List<MealScheduleModel> _todayMeals = [];
   bool _loadingVital = true;
   bool _loadingMeds = true;
+  bool _loadingMeals = true;
   int _unreadCount = 0;
 
   @override
@@ -153,6 +157,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loadingMeds = false);
+    }
+
+    // Load today's meal schedule
+    try {
+      final meals = await _api.getTodayMeals();
+      if (mounted) {
+        setState(() {
+          _todayMeals = meals.take(3).toList();
+          _loadingMeals = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingMeals = false);
     }
 
     // Load and schedule today's notifications (Now handled by Backend for persistence)
@@ -396,6 +413,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 16),
               _buildMedicationList(theme),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Jadwal Makan Hari Ini',
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MealScheduleListScreen(),
+                      ),
+                    ),
+                    child: const Text('Lihat Semua'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildMealList(theme),
               const SizedBox(height: 24),
             ],
           ),
@@ -584,6 +622,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MedicineTodayScreen()),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildMealList(ThemeData theme) {
+    if (_loadingMeals) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_todayMeals.isEmpty) {
+      return Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.restaurant_outlined,
+                  size: 48,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Belum ada jadwal makan',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _selectedIndex = 1),
+                  child: const Text('Tambah Jadwal'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return Column(
+      children: _todayMeals.map((meal) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.orange.withValues(alpha: 0.1),
+              child: const Icon(Icons.restaurant, color: Colors.orange),
+            ),
+            title: Text(
+              meal.mealType?.name ?? 'Makan',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+            subtitle: Text(
+              '${formatTime(meal.mealTime ?? '-')}${meal.notes != null && meal.notes!.isNotEmpty ? '  •  ${meal.notes}' : ''}',
+              style: const TextStyle(fontSize: 15),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: Colors.orange),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MealScheduleListScreen()),
             ),
           ),
         );
