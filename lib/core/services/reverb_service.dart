@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dart_pusher_channels/dart_pusher_channels.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
@@ -13,38 +14,54 @@ class ReverbService {
   final Map<String, dynamic> _subscriptions = {};
   bool _isConnecting = false;
   String _currentStatus = 'disconnected';
+  int? _currentUserId;
+  final Map<String, Set<String>> _boundEvents = {};
 
   Future<void> init() async {
-    if (_client != null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    final userId = prefs.getInt('user_id');
+    final userRole = prefs.getString('user_role') ?? 'user';
+
+    if (_client != null) {
+      if (!_currentStatus.toLowerCase().contains('established')) {
+        _client?.connect();
+      }
+      if (userId != null && userRole != 'admin' && _currentUserId != userId) {
+        _subscribeToGlobalNotifications(userId);
+      }
+      return;
+    }
+
     if (_isConnecting) {
-      // Wait for existing connection attempt
       while (_isConnecting) {
         await Future.delayed(const Duration(milliseconds: 500));
       }
-      if (_client != null) return;
+      if (_client != null) {
+        if (userId != null && userRole != 'admin' && _currentUserId != userId) {
+          _subscribeToGlobalNotifications(userId);
+        }
+        return;
+      }
     }
 
     _isConnecting = true;
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
-
     if (token == null) {
-      if (kDebugMode) {
+      if (kDebugMode)
         print('ReverbService: No access token found, skipping init');
-      }
       _isConnecting = false;
       return;
     }
 
-    final host = dotenv.env['REVERB_HOST'] ?? 'localhost';
+    final host = dotenv.env['REVERB_HOST'] ?? '202.74.74.126';
     final port = int.tryParse(dotenv.env['REVERB_PORT'] ?? '8080') ?? 8080;
-    final key = dotenv.env['REVERB_APP_KEY'] ?? '';
+    final key = dotenv.env['REVERB_APP_KEY'] ?? 'p9uoyixp6y1f1m67fsk1';
     final scheme = dotenv.env['REVERB_SCHEME'] ?? 'http';
 
     if (kDebugMode) {
       print(
-        'ReverbService: Initializing with host: $host, port: $port, key: $key, scheme: $scheme',
+        'ReverbService: host=$host | port=$port | key=$key | scheme=$scheme',
       );
     }
 
@@ -60,23 +77,28 @@ class ReverbService {
         options: options,
         connectionErrorHandler: (error, trace, client) {
           if (kDebugMode) print('ReverbService: Connection Error: $error');
+          _scheduleReconnect();
         },
       );
 
       _client?.lifecycleStream.listen((status) {
         _currentStatus = status.toString();
-        if (kDebugMode) {
-          print('ReverbService: Connection status changed: $status');
+        if (kDebugMode) print('ReverbService: Status: $_currentStatus');
+
+        if (_currentStatus.toLowerCase().contains('established')) {
+          _isReconnecting = false;
         }
-        if (_currentStatus.toLowerCase().contains('disconnected')) {
-          _reconnect();
+
+        if (_currentStatus.toLowerCase().contains('disconnected') ||
+            _currentStatus.toLowerCase().contains('connectionerror')) {
+          _scheduleReconnect();
         }
       });
 
       _client?.eventStream.listen((event) {
         if (kDebugMode) {
           print(
-            'ReverbService: Incoming Event - Channel: ${event.channelName}, Name: ${event.name}',
+            'ReverbService: Event - Channel: ${event.channelName}, Name: ${event.name}',
           );
         }
       });
@@ -84,64 +106,64 @@ class ReverbService {
       await _client?.connect();
       if (kDebugMode) print('ReverbService: Connected successfully');
 
-      // Subscribe to global user notifications after successful connection
-      final userId = prefs.getInt('user_id');
-      if (userId != null) {
+      if (userId != null && userRole != 'admin' && _currentUserId != userId) {
         _subscribeToGlobalNotifications(userId);
       }
     } catch (e) {
       if (kDebugMode) print('ReverbService: Initialization failed: $e');
       _client = null;
+      _scheduleReconnect();
     } finally {
       _isConnecting = false;
     }
   }
 
-  void _reconnect() {
-    Future.delayed(const Duration(seconds: 5), () {
-      if (_client != null &&
-          !_currentStatus.toLowerCase().contains('connected')) {
-        if (kDebugMode) print('ReverbService: Attempting to reconnect...');
-        _client?.connect();
+  bool _isReconnecting = false;
+
+  void _scheduleReconnect() {
+    if (_isReconnecting) return;
+    _isReconnecting = true;
+    Future.delayed(const Duration(seconds: 5), () async {
+      if (kDebugMode) print('ReverbService: Attempting to reconnect...');
+      try {
+        _client?.disconnect();
+        _client = null;
+        _subscriptions.clear();
+        _boundEvents.clear();
+        _currentUserId = null;
+        await init();
+      } catch (e) {
+        if (kDebugMode) print('ReverbService: Reconnect failed: $e');
+      } finally {
+        _isReconnecting = false;
       }
     });
   }
 
   void _subscribeToGlobalNotifications(int userId) {
     if (kDebugMode) print('ReverbService: Subscribing for user $userId');
+    _currentUserId = userId;
 
-    // Laravel broadcasts the event as 'notification.created'
-    // The payload typically contains a 'notification' object
     subscribePrivate('patient.$userId', 'notification.created', (data) {
-      if (kDebugMode) {
-        print('ReverbService: Global notification received: $data');
-      }
+      if (kDebugMode) print('ReverbService: notification.created raw: $data');
 
-      // Extract notification data. Laravel usually wraps it in the property name.
+      final dynamic parsedData = _parseData(data);
       final dynamic notificationData =
-          data is Map && data.containsKey('notification')
-          ? data['notification']
-          : data;
+          parsedData is Map && parsedData.containsKey('notification')
+          ? parsedData['notification']
+          : parsedData;
 
       if (notificationData is! Map) {
-        if (kDebugMode) {
+        if (kDebugMode)
           print('ReverbService: Invalid notification data format');
-        }
         return;
       }
 
       final String title = notificationData['title'] ?? 'Notifikasi Baru';
       final String message = notificationData['message'] ?? '';
       final String? type = notificationData['notification_type']?.toString();
-      final String? relatedId = notificationData['related_id']?.toString();
+      final String? related = notificationData['related_id']?.toString();
 
-      if (kDebugMode) {
-        print(
-          'ReverbService: Processing notification - Type: $type, Title: $title',
-        );
-      }
-
-      // Customize behavior based on type
       String finalTitle = title;
       if (type == 'medicine_reminder') {
         finalTitle = '💊 $title';
@@ -149,34 +171,44 @@ class ReverbService {
         finalTitle = '🍽️ $title';
       }
 
-      // Trigger local popup
       LocalNotificationService().showNotification(
         id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         title: finalTitle,
         body: message,
-        payload: relatedId,
+        payload: related,
       );
     });
 
-    // Fallback or legacy support for specific medicine reminder event
     subscribePrivate('patient.$userId', 'medicine.reminder', (data) {
-      if (kDebugMode) {
-        print('ReverbService: Specific medicine reminder received: $data');
-      }
+      if (kDebugMode) print('ReverbService: medicine.reminder raw: $data');
 
-      final dynamic payload = data is Map && data.containsKey('notification')
-          ? data['notification']
-          : data;
+      final dynamic payload = _parseData(data);
+      final dynamic notificationData =
+          payload is Map && payload.containsKey('notification')
+          ? payload['notification']
+          : payload;
 
       LocalNotificationService().showNotification(
         id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: '💊 ${payload['title'] ?? 'Waktunya Minum Obat!'}',
-        body: payload['message'] ?? '',
+        title: '💊 ${notificationData['title'] ?? 'Waktunya Minum Obat!'}',
+        body: notificationData['message'] ?? '',
         payload:
-            payload['schedule_id']?.toString() ??
-            payload['related_id']?.toString(),
+            notificationData['schedule_id']?.toString() ??
+            notificationData['related_id']?.toString(),
       );
     });
+  }
+
+  dynamic _parseData(dynamic data) {
+    if (data is Map) return data;
+    if (data is String) {
+      try {
+        return jsonDecode(data);
+      } catch (e) {
+        if (kDebugMode) print('ReverbService: Error parsing JSON: $e');
+      }
+    }
+    return data;
   }
 
   void subscribePrivate(
@@ -185,37 +217,50 @@ class ReverbService {
     Function(dynamic) callback,
   ) async {
     if (_client == null ||
-        _currentStatus.toLowerCase().contains('disconnected')) {
+        !_currentStatus.toLowerCase().contains('established')) {
       await init();
       if (_client == null) {
-        if (kDebugMode) {
+        if (kDebugMode)
           print('ReverbService: Cannot subscribe, client is null');
-        }
         return;
       }
     }
 
-    final channelKey = "private-$channelName";
+    // Library ternyata TIDAK otomatis menambah prefix 'private-',
+    // Jadi saat memanggil privateChannel(), string-nya HARUS diawali dengan 'private-'
+    String fullChannelName = channelName.startsWith('private-')
+        ? channelName
+        : 'private-$channelName';
+
+    // Untuk key map _subscriptions, kita bisa gunakan nama tanpa prefix
+    // agar mudah direferensikan di tempat lain
+    final channelKey = channelName.startsWith('private-')
+        ? channelName.replaceFirst('private-', '')
+        : channelName;
+
     if (!_subscriptions.containsKey(channelKey)) {
       if (kDebugMode) {
-        print('ReverbService: Subscribing to private channel: $channelKey');
+        print('ReverbService: Subscribing to $fullChannelName');
       }
-
-      final apiBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
-      // Try to determine the auth endpoint. Some Laravel setups use /broadcasting/auth, others /api/broadcasting/auth
-      final baseUrl = apiBaseUrl.replaceAll('/api', '');
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('access_token') ?? '';
 
+      final apiBaseUrl =
+          dotenv.env['API_BASE_URL'] ?? 'http://202.74.74.126/api';
+      final authEndpoint = '$apiBaseUrl/broadcasting/auth';
+
+      if (kDebugMode) print('ReverbService: Auth endpoint: $authEndpoint');
+
       _subscriptions[channelKey] = _client!.privateChannel(
-        channelKey,
+        fullChannelName, // Harus private-patient.2
         authorizationDelegate:
             EndpointAuthorizableChannelTokenAuthorizationDelegate.forPrivateChannel(
-              authorizationEndpoint: Uri.parse('$baseUrl/broadcasting/auth'),
+              authorizationEndpoint: Uri.parse(authEndpoint),
               headers: {
                 'Authorization': 'Bearer $token',
                 'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
               },
             ),
       );
@@ -223,12 +268,25 @@ class ReverbService {
     }
 
     if (kDebugMode) {
-      print('ReverbService: Binding event $eventName to channel $channelKey');
+      print('ReverbService: Binding $eventName on private-$channelKey');
     }
+
+    _boundEvents.putIfAbsent(channelKey, () => <String>{});
+    if (_boundEvents[channelKey]!.contains(eventName)) {
+      if (kDebugMode) {
+        print(
+          'ReverbService: Event $eventName already bound on private-$channelKey',
+        );
+      }
+      return;
+    }
+
+    _boundEvents[channelKey]!.add(eventName);
+
     _subscriptions[channelKey].bind(eventName).listen((event) {
       if (kDebugMode) {
         print(
-          'ReverbService: Event $eventName received on $channelKey - Data: ${event.data}',
+          'ReverbService: [$eventName] on [private-$channelKey] → ${event.data}',
         );
       }
       if (event.data != null) {
@@ -245,21 +303,28 @@ class ReverbService {
     if (_client == null) return;
 
     if (!_subscriptions.containsKey(channelName)) {
-      if (kDebugMode) {
-        print('ReverbService: Subscribing to public channel: $channelName');
-      }
+      if (kDebugMode)
+        print('ReverbService: Subscribing to public: $channelName');
       _subscriptions[channelName] = _client!.publicChannel(channelName);
       _subscriptions[channelName].subscribe();
     }
 
-    if (kDebugMode) {
-      print('ReverbService: Binding event $eventName to channel $channelName');
-    }
-    _subscriptions[channelName].bind(eventName).listen((event) {
+    if (kDebugMode) print('ReverbService: Binding $eventName on $channelName');
+
+    _boundEvents.putIfAbsent(channelName, () => <String>{});
+    if (_boundEvents[channelName]!.contains(eventName)) {
       if (kDebugMode) {
         print(
-          'ReverbService: Event $eventName received on $channelName - Data: ${event.data}',
+          'ReverbService: Event $eventName already bound on public-$channelName',
         );
+      }
+      return;
+    }
+    _boundEvents[channelName]!.add(eventName);
+
+    _subscriptions[channelName].bind(eventName).listen((event) {
+      if (kDebugMode) {
+        print('ReverbService: [$eventName] on [$channelName] → ${event.data}');
       }
       if (event.data != null) {
         callback(event.data);
@@ -271,6 +336,8 @@ class ReverbService {
     if (kDebugMode) print('ReverbService: Disconnecting');
     _client?.disconnect();
     _subscriptions.clear();
+    _boundEvents.clear();
     _client = null;
+    _currentUserId = null;
   }
 }

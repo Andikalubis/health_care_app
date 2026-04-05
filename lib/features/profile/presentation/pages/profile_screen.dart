@@ -35,9 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _userName = prefs.getString('user_name') ?? 'Tamu';
         _userEmail = prefs.getString('user_email') ?? '';
         _userRole = prefs.getString('user_role') ?? 'user';
-        // You might want to persist this status or check it from the backend
-        _isTelegramIntegrated =
-            prefs.getBool('is_telegram_integrated') ?? false;
+        _isTelegramIntegrated = prefs.getBool('is_telegram') ?? false;
       });
     }
   }
@@ -47,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await apiService.logout();
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString('access_token') == null) {
-      await prefs.remove('is_telegram_integrated');
+      await prefs.remove('is_telegram');
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -101,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             if (launched) {
               final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('is_telegram_integrated', true);
+              await prefs.setBool('is_telegram', true);
               if (mounted) setState(() => _isTelegramIntegrated = true);
             } else {
               throw 'Tidak bisa membuka link Telegram';
@@ -124,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       // Logic for disconnecting if needed
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('is_telegram_integrated', false);
+      await prefs.setBool('is_telegram', false);
       setState(() => _isTelegramIntegrated = false);
     }
   }

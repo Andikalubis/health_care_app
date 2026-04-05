@@ -60,7 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final realtime = ReverbService();
     await realtime.init();
 
-    if (userId != null) {
+    if (userId != null && role != 'admin') {
       // Subscribe to patient specific updates
       realtime.subscribePrivate('patient.$userId', 'vital.updated', (_) {
         if (kDebugMode) print('Dashboard: Vital updated, refreshing...');

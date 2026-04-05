@@ -18,12 +18,13 @@ mixin AuthApi on BaseApi {
         await prefs.setInt('user_id', authResponse.user.id);
         await prefs.setString('user_email', authResponse.user.email);
         await prefs.setString('user_role', authResponse.user.role);
+        await prefs.setBool('is_telegram', authResponse.isTelegram);
         if (authResponse.refreshToken != null) {
           await prefs.setString('refresh_token', authResponse.refreshToken!);
         }
         return authResponse;
       } else {
-        throw Exception('Login failed: ${response.statusMessage}');
+        throw Exception('Login failed: \${response.statusMessage}');
       }
     } on DioException catch (e) {
       handleError(e, 'Login failed');
@@ -54,6 +55,7 @@ mixin AuthApi on BaseApi {
         await prefs.setInt('user_id', authResponse.user.id);
         await prefs.setString('user_email', authResponse.user.email);
         await prefs.setString('user_role', authResponse.user.role);
+        await prefs.setBool('is_telegram', authResponse.isTelegram);
         if (authResponse.refreshToken != null) {
           await prefs.setString('refresh_token', authResponse.refreshToken!);
         }
