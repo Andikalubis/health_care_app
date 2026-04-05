@@ -9,12 +9,13 @@ class ErrorInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response != null) {
       final statusCode = err.response?.statusCode;
+      final isSilent = err.requestOptions.extra['silent'] == true;
 
-      if (statusCode == 404) {
+      if (statusCode == 404 && !isSilent) {
         navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (_) => const NotFoundPage()),
         );
-      } else if (statusCode != null && statusCode >= 500) {
+      } else if (statusCode != null && statusCode >= 500 && !isSilent) {
         navigatorKey.currentState?.push(
           MaterialPageRoute(builder: (_) => const ServerErrorPage()),
         );

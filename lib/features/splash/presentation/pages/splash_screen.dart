@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/dashboard_screen.dart';
 import 'package:health_care_app/core/utils/permission_helper.dart';
+import 'package:health_care_app/core/services/reverb_service.dart';
+import 'package:health_care_app/core/services/notification_scheduler_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -38,6 +40,10 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (accessToken != null && accessToken.isNotEmpty) {
+      // Global initialization
+      ReverbService().init();
+      NotificationSchedulerService().scheduleTodayNotifications();
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const DashboardScreen()),

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/services/notification_scheduler_service.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
-import 'package:health_care_app/core/services/reverb_service.dart';
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_history_list_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MedicineTodayScreen extends StatefulWidget {
   const MedicineTodayScreen({super.key});
@@ -23,28 +22,7 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
   void initState() {
     super.initState();
     _load();
-    _initRealtime();
-  }
-
-  void _initRealtime() async {
-    final realtime = ReverbService();
-    await realtime.init();
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('user_id');
-    if (userId != null) {
-      realtime.subscribePrivate(
-        'patient.$userId',
-        'medicine.schedule.updated',
-        (_) {
-          Future.delayed(const Duration(seconds: 1), () => _load());
-        },
-      );
-      realtime.subscribePrivate('patient.$userId', 'medicine.stock.updated', (
-        _,
-      ) {
-        Future.delayed(const Duration(seconds: 1), () => _load());
-      });
-    }
+    // Realtime is already initialized globally in SplashScreen/Login
   }
 
   Future<void> _load() async {
@@ -59,7 +37,8 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
           _doses = data;
           _loading = false;
         });
-        _scheduleTodayNotifications();
+        // Sync local notifications
+        NotificationSchedulerService().scheduleTodayNotifications();
       }
     } catch (e) {
       if (mounted) {
@@ -67,30 +46,6 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
           _error = e.toString();
           _loading = false;
         });
-      }
-    }
-  }
-
-  Future<void> _scheduleTodayNotifications() async {
-    final notificationService = LocalNotificationService();
-    for (var dose in _doses) {
-      final status = dose['status'];
-      if (status == 'pending') {
-        DateTime scheduledTime = DateTime.parse(dose['scheduled_for']);
-        if (scheduledTime.isAfter(DateTime.now())) {
-          int scheduleId = dose['schedule']['id'];
-          int timeId = dose['schedule_time']['id'];
-          int notificationId =
-              scheduleId * 1000 + timeId; // Unique ID per dose time
-
-          await notificationService.scheduleNotification(
-            id: notificationId,
-            title: 'Waktunya Minum Obat!',
-            body:
-                '${dose['schedule']['medicine']['name']} - ${dose['schedule']['dose_per_intake']} unit',
-            scheduledTime: scheduledTime,
-          );
-        }
       }
     }
   }
