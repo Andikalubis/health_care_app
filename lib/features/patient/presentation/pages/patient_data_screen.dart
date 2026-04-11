@@ -230,7 +230,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
   final _heightCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
   final _noTlpCtrl = TextEditingController();
-  final _telegramCtrl = TextEditingController();
 
   String _gender = 'male';
   String? _bloodType;
@@ -263,7 +262,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
       _weightCtrl.text = e.weight?.toString() ?? '';
       _bloodType = e.bloodType;
       _noTlpCtrl.text = e.noTlp ?? '';
-      _telegramCtrl.text = e.telegramId ?? '';
     }
   }
 
@@ -274,7 +272,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
     _heightCtrl.dispose();
     _weightCtrl.dispose();
     _noTlpCtrl.dispose();
-    _telegramCtrl.dispose();
     super.dispose();
   }
 
@@ -294,9 +291,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
         weight: double.tryParse(_weightCtrl.text.trim()),
         bloodType: _bloodType,
         noTlp: _noTlpCtrl.text.trim().isEmpty ? null : _noTlpCtrl.text.trim(),
-        telegramId: _telegramCtrl.text.trim().isEmpty
-            ? null
-            : _telegramCtrl.text.trim(),
       );
       if (widget.existing != null) {
         await _api.updatePatientData(widget.existing!.id!, model);
@@ -416,14 +410,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
               decoration: const InputDecoration(
                 labelText: 'No. Telepon / WhatsApp',
                 prefixIcon: Icon(Icons.phone),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _telegramCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Telegram ID (Opsional)',
-                prefixIcon: Icon(Icons.telegram),
               ),
             ),
             const SizedBox(height: 16),
