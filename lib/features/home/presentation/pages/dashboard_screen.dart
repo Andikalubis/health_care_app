@@ -394,58 +394,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        GestureDetector(
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NotificationListScreen()),
-            );
-            _loadDashboardData(); // Refresh count when coming back
-          },
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+        if (_userRole != 'admin')
+          GestureDetector(
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificationListScreen(),
                 ),
-                child: Icon(
-                  Icons.notifications_none_rounded,
-                  size: 30,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              if (_unreadCount > 0)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 22,
-                      minHeight: 22,
-                    ),
-                    child: Text(
-                      _unreadCount > 99 ? '99+' : '$_unreadCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+              );
+              _loadDashboardData(); // Refresh count when coming back
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.notifications_none_rounded,
+                    size: 30,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-            ],
+                if (_unreadCount > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 22,
+                        minHeight: 22,
+                      ),
+                      child: Text(
+                        _unreadCount > 99 ? '99+' : '$_unreadCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }

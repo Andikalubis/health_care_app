@@ -17,19 +17,19 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _apiService = ApiService();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
   void _handleLogin() async {
-    final email = _emailController.text.trim();
+    final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email dan kata sandi harus diisi')),
+        const SnackBar(content: Text('Username dan kata sandi harus diisi')),
       );
       return;
     }
@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await _apiService.login(email, password);
+      final response = await _apiService.login(username, password);
 
       if (mounted) {
         // Global initialization after login
@@ -108,10 +108,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 48),
               AppTextField(
-                label: 'Email',
-                hintText: 'Contoh: budi@email.com',
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
+                label: 'Username',
+                hintText: 'Contoh: budi123',
+                controller: _usernameController,
                 prefixIcon: const Icon(Icons.person_outline),
               ),
               const SizedBox(height: 24),

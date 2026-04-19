@@ -16,8 +16,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _userName = 'Memuat...';
-  String _userEmail = '';
+  String _userUsername = '';
   String _userRole = 'user';
   bool _isTelegramIntegrated = false;
   bool _isIntegratingTelegram = false;
@@ -32,8 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _userName = prefs.getString('user_name') ?? 'Tamu';
-        _userEmail = prefs.getString('user_email') ?? '';
+        _userUsername = prefs.getString('user_username') ?? '';
         _userRole = prefs.getString('user_role') ?? 'user';
         _isTelegramIntegrated = prefs.getBool('is_telegram') ?? false;
       });
@@ -58,10 +56,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleTelegramIntegration(bool value) async {
     if (value) {
-      if (_userEmail.isEmpty) {
+      if (_userUsername.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Email user tidak ditemukan')),
+            const SnackBar(content: Text('Username user tidak ditemukan')),
           );
         }
         return;
@@ -71,7 +69,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       try {
         final apiService = ApiService();
-        final response = await apiService.subscribeLinkByEmail(_userEmail);
+        final response = await apiService.subscribeLinkByUsername(
+          _userUsername,
+        );
 
         if (response.containsKey('subscribe_url')) {
           final String? subscribeUrl = response['subscribe_url']?.toString();
@@ -149,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              _userName,
+              _userUsername,
               style: theme.textTheme.headlineMedium?.copyWith(fontSize: 22),
             ),
             const SizedBox(height: 4),
@@ -192,18 +192,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  const AppDivider(),
-                  _buildProfileOption(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notifikasi',
-                    subtitle: 'Riwayat pesan dan peringatan',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const NotificationListScreen(),
+                  if (_userRole != 'admin') ...[
+                    const AppDivider(),
+                    _buildProfileOption(
+                      icon: Icons.notifications_outlined,
+                      title: 'Notifikasi',
+                      subtitle: 'Riwayat pesan dan peringatan',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationListScreen(),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                   const AppDivider(),
                   _buildProfileOption(
                     icon: Icons.help_outline,
@@ -211,58 +213,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: 'FAQ dan kontak dukungan',
                     onTap: () {},
                   ),
-                  const AppDivider(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 20,
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                          child: const Icon(
-                            Icons.telegram,
-                            color: Colors.blue,
-                            size: 26,
+                  if (_userRole != 'admin') ...[
+                    const AppDivider(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 20,
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 22,
+                            backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                            child: const Icon(
+                              Icons.telegram,
+                              color: Colors.blue,
+                              size: 26,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Integrasi Telegram',
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Integrasi Telegram',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'Terima notifikasi via Telegram',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontSize: 14,
+                                Text(
+                                  'Terima notifikasi via Telegram',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontSize: 14,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        if (_isIntegratingTelegram)
-                          const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        else
-                          Switch(
-                            value: _isTelegramIntegrated,
-                            onChanged: _handleTelegramIntegration,
-                            activeThumbColor: Colors.blue,
-                          ),
-                      ],
+                          if (_isIntegratingTelegram)
+                            const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          else
+                            Switch(
+                              value: _isTelegramIntegrated,
+                              onChanged: _handleTelegramIntegration,
+                              activeThumbColor: Colors.blue,
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

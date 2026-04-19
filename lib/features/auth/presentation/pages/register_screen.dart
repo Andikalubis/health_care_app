@@ -14,6 +14,8 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _nikController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -23,11 +25,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleRegister() async {
     final name = _nameController.text.trim();
+    final username = _usernameController.text.trim();
+    final nik = _nikController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || username.isEmpty || nik.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Semua field harus diisi')));
@@ -48,9 +52,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final response = await _apiService.register(
         name,
-        email,
+        username,
+        nik,
         password,
         confirmPassword,
+        email: email,
       );
 
       if (mounted) {
@@ -119,11 +125,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 label: 'Nama Lengkap',
                 hintText: 'Contoh: Budi Santoso',
                 controller: _nameController,
+                prefixIcon: const Icon(Icons.person),
+              ),
+              const SizedBox(height: 24),
+              AppTextField(
+                label: 'Username',
+                hintText: 'Contoh: budi123',
+                controller: _usernameController,
                 prefixIcon: const Icon(Icons.person_outline),
               ),
               const SizedBox(height: 24),
               AppTextField(
-                label: 'Email',
+                label: 'NIK',
+                hintText: 'Masukkan 16 digit NIK',
+                controller: _nikController,
+                keyboardType: TextInputType.number,
+                prefixIcon: const Icon(Icons.badge_outlined),
+              ),
+              const SizedBox(height: 24),
+              AppTextField(
+                label: 'Email (Opsional)',
                 hintText: 'budisantoso@email.com',
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,

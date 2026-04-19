@@ -30,10 +30,10 @@ mixin TelegramApi on BaseApi {
     await dio.delete('/telegram-users/$id');
   }
 
-  Future<Map<String, dynamic>> subscribeLinkByEmail(String email) async {
+  Future<Map<String, dynamic>> subscribeLinkByUsername(String username) async {
     final res = await dio.post(
-      '/telegram/subscribe-link-by-email',
-      data: {'email': email},
+      '/telegram/subscribe-link-by-username',
+      data: {'username': username},
     );
     return unwrap(res);
   }
