@@ -29,4 +29,12 @@ mixin TelegramApi on BaseApi {
   Future<void> deleteTelegramUser(int id) async {
     await dio.delete('/telegram-users/$id');
   }
+
+  Future<Map<String, dynamic>> subscribeLinkByUsername(String username) async {
+    final res = await dio.post(
+      '/telegram/subscribe-link-by-username',
+      data: {'username': username},
+    );
+    return unwrap(res);
+  }
 }

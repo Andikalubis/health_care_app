@@ -1,6 +1,7 @@
 class PatientDataModel {
   final int? id;
   final int? userId;
+  final String? nik;
   final String name;
   final String gender;
   final String birthDate;
@@ -13,6 +14,7 @@ class PatientDataModel {
   PatientDataModel({
     this.id,
     this.userId,
+    this.nik,
     required this.name,
     required this.gender,
     required this.birthDate,
@@ -29,6 +31,7 @@ class PatientDataModel {
       userId: json['user_id'] != null
           ? int.tryParse(json['user_id'].toString())
           : null,
+      nik: json['nik'],
       name: json['name'] ?? '',
       gender: json['gender'] ?? '',
       birthDate: json['birth_date'] ?? '',
@@ -47,6 +50,7 @@ class PatientDataModel {
   Map<String, dynamic> toJson() {
     return {
       if (userId != null) 'user_id': userId,
+      if (nik != null) 'nik': nik,
       'name': name,
       'gender': gender,
       'birth_date': birthDate,

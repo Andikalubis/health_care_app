@@ -12,7 +12,7 @@ subprojects {
                 if (namespace == null) {
                     namespace = project.group.toString()
                 }
-                compileSdkVersion(35)
+                compileSdkVersion(36)
                 compileOptions {
                     sourceCompatibility = JavaVersion.VERSION_17
                     targetCompatibility = JavaVersion.VERSION_17

@@ -5,12 +5,14 @@ class AuthResponse {
   final String? refreshToken;
   final String tokenType;
   final UserModel user;
+  final bool isTelegram;
 
   AuthResponse({
     required this.accessToken,
     this.refreshToken,
     required this.tokenType,
     required this.user,
+    required this.isTelegram,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class AuthResponse {
       refreshToken: json['refresh_token'],
       tokenType: json['token_type'],
       user: UserModel.fromJson(json['user']),
+      isTelegram: json['is_telegram'] ?? false,
     );
   }
 
@@ -28,6 +31,7 @@ class AuthResponse {
       'refresh_token': refreshToken,
       'token_type': tokenType,
       'user': user.toJson(),
+      'is_telegram': isTelegram,
     };
   }
 }

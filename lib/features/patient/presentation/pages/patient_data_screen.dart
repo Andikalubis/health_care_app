@@ -225,12 +225,12 @@ class _PatientDataForm extends StatefulWidget {
 class _PatientDataFormState extends State<_PatientDataForm> {
   final _formKey = GlobalKey<FormState>();
   final _api = ApiService();
+  final _nikCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _birthCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
   final _noTlpCtrl = TextEditingController();
-  final _telegramCtrl = TextEditingController();
 
   String _gender = 'male';
   String? _bloodType;
@@ -256,6 +256,7 @@ class _PatientDataFormState extends State<_PatientDataForm> {
     super.initState();
     if (widget.existing != null) {
       final e = widget.existing!;
+      _nikCtrl.text = e.nik ?? '';
       _nameCtrl.text = e.name;
       _gender = e.gender;
       _birthCtrl.text = e.birthDate;
@@ -263,18 +264,17 @@ class _PatientDataFormState extends State<_PatientDataForm> {
       _weightCtrl.text = e.weight?.toString() ?? '';
       _bloodType = e.bloodType;
       _noTlpCtrl.text = e.noTlp ?? '';
-      _telegramCtrl.text = e.telegramId ?? '';
     }
   }
 
   @override
   void dispose() {
+    _nikCtrl.dispose();
     _nameCtrl.dispose();
     _birthCtrl.dispose();
     _heightCtrl.dispose();
     _weightCtrl.dispose();
     _noTlpCtrl.dispose();
-    _telegramCtrl.dispose();
     super.dispose();
   }
 
@@ -287,6 +287,7 @@ class _PatientDataFormState extends State<_PatientDataForm> {
 
       final model = PatientDataModel(
         userId: userId,
+        nik: _nikCtrl.text.trim().isEmpty ? null : _nikCtrl.text.trim(),
         name: _nameCtrl.text.trim(),
         gender: _gender,
         birthDate: _birthCtrl.text.trim(),
@@ -294,9 +295,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
         weight: double.tryParse(_weightCtrl.text.trim()),
         bloodType: _bloodType,
         noTlp: _noTlpCtrl.text.trim().isEmpty ? null : _noTlpCtrl.text.trim(),
-        telegramId: _telegramCtrl.text.trim().isEmpty
-            ? null
-            : _telegramCtrl.text.trim(),
       );
       if (widget.existing != null) {
         await _api.updatePatientData(widget.existing!.id!, model);
@@ -346,6 +344,15 @@ class _PatientDataFormState extends State<_PatientDataForm> {
               ),
             ),
             const SizedBox(height: 24),
+            TextFormField(
+              controller: _nikCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'NIK (Opsional)',
+                prefixIcon: Icon(Icons.credit_card),
+              ),
+            ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _nameCtrl,
               decoration: const InputDecoration(
@@ -416,14 +423,6 @@ class _PatientDataFormState extends State<_PatientDataForm> {
               decoration: const InputDecoration(
                 labelText: 'No. Telepon / WhatsApp',
                 prefixIcon: Icon(Icons.phone),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _telegramCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Telegram ID (Opsional)',
-                prefixIcon: Icon(Icons.telegram),
               ),
             ),
             const SizedBox(height: 16),

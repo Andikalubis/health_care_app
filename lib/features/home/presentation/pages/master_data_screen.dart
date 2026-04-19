@@ -108,20 +108,21 @@ class _MasterDataScreenState extends State<MasterDataScreen> {
                     );
                   },
                 ),
-                _buildMasterItem(
-                  theme,
-                  title: 'Master Notifikasi',
-                  subtitle: 'Kelola template notifikasi sistem',
-                  icon: Icons.notifications_active_outlined,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MasterNotificationListScreen(),
-                      ),
-                    );
-                  },
-                ),
+                if (_userRole != 'admin')
+                  _buildMasterItem(
+                    theme,
+                    title: 'Master Notifikasi',
+                    subtitle: 'Kelola template notifikasi sistem',
+                    icon: Icons.notifications_active_outlined,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MasterNotificationListScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 if (_userRole == 'admin') ...[
                   _buildMasterItem(
                     theme,

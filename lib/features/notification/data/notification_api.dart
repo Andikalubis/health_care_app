@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:health_care_app/core/network/base_api.dart';
 import 'package:health_care_app/features/notification/data/models/notification_model.dart';
 import 'package:health_care_app/features/notification/data/models/master_notification_model.dart';
@@ -23,9 +24,37 @@ mixin NotificationApi on BaseApi {
   }
 
   Future<int> getUnreadNotificationCount() async {
-    final res = await dio.get('/notifications/unread-count');
-    final data = unwrap(res);
-    return data['unread_count'] ?? 0;
+    try {
+      // Primary attempt: standard hyphenated
+      final res = await dio.get(
+        '/notifications/unread-count',
+        options: Options(extra: {'silent': true}),
+      );
+      final data = unwrap(res);
+      return data['unread_count'] ?? data['count'] ?? 0;
+    } catch (_) {
+      try {
+        // Fallback 1: underscore version
+        final res = await dio.get(
+          '/notifications/unread_count',
+          options: Options(extra: {'silent': true}),
+        );
+        final data = unwrap(res);
+        return data['unread_count'] ?? data['count'] ?? 0;
+      } catch (_) {
+        try {
+          // Fallback 2: hyphenated typo (as mentioned in user request)
+          final res = await dio.get(
+            '/notifications/uread-count',
+            options: Options(extra: {'silent': true}),
+          );
+          final data = unwrap(res);
+          return data['unread_count'] ?? data['count'] ?? 0;
+        } catch (_) {
+          return 0; // Fail gracefully
+        }
+      }
+    }
   }
 
   // ─── MASTER NOTIFICATIONS ─────────────────────────────────

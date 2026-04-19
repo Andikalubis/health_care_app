@@ -59,8 +59,9 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
           _healthTypes = results[1] as List<HealthTypeModel>;
           _limits = results[2] as List<HealthLimitModel>;
           if (widget.existing == null) {
-            if (_patients.isNotEmpty && _selectedPatientId == null)
+            if (_patients.isNotEmpty && _selectedPatientId == null) {
               _selectedPatientId = _patients.first.id;
+            }
             if (_healthTypes.isNotEmpty && _selectedHealthTypeId == null) {
               _selectedHealthTypeId = _healthTypes.first.id;
             }
