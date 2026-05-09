@@ -2,6 +2,7 @@ class PatientDataModel {
   final int? id;
   final int? userId;
   final String? nik;
+  final String? email;
   final String name;
   final String gender;
   final String birthDate;
@@ -15,6 +16,7 @@ class PatientDataModel {
     this.id,
     this.userId,
     this.nik,
+    this.email,
     required this.name,
     required this.gender,
     required this.birthDate,
@@ -32,6 +34,9 @@ class PatientDataModel {
           ? int.tryParse(json['user_id'].toString())
           : null,
       nik: json['nik'],
+      email: json['user'] != null && json['user']['email'] != null
+          ? json['user']['email']
+          : json['email'],
       name: json['name'] ?? '',
       gender: json['gender'] ?? '',
       birthDate: json['birth_date'] ?? '',
@@ -51,6 +56,7 @@ class PatientDataModel {
     return {
       if (userId != null) 'user_id': userId,
       if (nik != null) 'nik': nik,
+      if (email != null) 'email': email,
       'name': name,
       'gender': gender,
       'birth_date': birthDate,

@@ -226,6 +226,7 @@ class _PatientDataFormState extends State<_PatientDataForm> {
   final _formKey = GlobalKey<FormState>();
   final _api = ApiService();
   final _nikCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _birthCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
@@ -257,6 +258,7 @@ class _PatientDataFormState extends State<_PatientDataForm> {
     if (widget.existing != null) {
       final e = widget.existing!;
       _nikCtrl.text = e.nik ?? '';
+      _emailCtrl.text = e.email ?? '';
       _nameCtrl.text = e.name;
       _gender = e.gender;
       _birthCtrl.text = e.birthDate;
@@ -270,6 +272,7 @@ class _PatientDataFormState extends State<_PatientDataForm> {
   @override
   void dispose() {
     _nikCtrl.dispose();
+    _emailCtrl.dispose();
     _nameCtrl.dispose();
     _birthCtrl.dispose();
     _heightCtrl.dispose();
@@ -288,6 +291,7 @@ class _PatientDataFormState extends State<_PatientDataForm> {
       final model = PatientDataModel(
         userId: userId,
         nik: _nikCtrl.text.trim().isEmpty ? null : _nikCtrl.text.trim(),
+        email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
         name: _nameCtrl.text.trim(),
         gender: _gender,
         birthDate: _birthCtrl.text.trim(),
@@ -423,6 +427,15 @@ class _PatientDataFormState extends State<_PatientDataForm> {
               decoration: const InputDecoration(
                 labelText: 'No. Telepon / WhatsApp',
                 prefixIcon: Icon(Icons.phone),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email (Opsional)',
+                prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
             const SizedBox(height: 16),
