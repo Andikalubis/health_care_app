@@ -81,10 +81,16 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
       orElse: () => null,
     );
     if (limit == null) return 'normal';
-    if (limit.dangerMin != null && val <= limit.dangerMin!) return 'danger';
-    if (limit.dangerMax != null && val >= limit.dangerMax!) return 'danger';
-    if (limit.warningMin != null && val <= limit.warningMin!) return 'warning';
-    if (limit.warningMax != null && val >= limit.warningMax!) return 'warning';
+    if (limit.dangerMin != null &&
+        limit.dangerMax != null &&
+        val >= limit.dangerMin! &&
+        val <= limit.dangerMax!)
+      return 'danger';
+    if (limit.warningMin != null &&
+        limit.warningMax != null &&
+        val >= limit.warningMin! &&
+        val <= limit.warningMax!)
+      return 'warning';
     return 'normal';
   }
 
