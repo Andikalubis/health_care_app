@@ -7,8 +7,7 @@ import 'package:health_care_app/core/widgets/app_button.dart';
 import 'package:health_care_app/core/widgets/app_text_field.dart';
 import 'package:health_care_app/core/widgets/app_divider.dart';
 import 'package:health_care_app/features/auth/presentation/pages/register_screen.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
-
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -75,45 +74,52 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final pad = ResponsiveHelper.contentPadding(context);
+    final iconSz = ResponsiveHelper.iconSize(context, 80);
+    final sp = ResponsiveHelper.spacing(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+          padding: EdgeInsets.symmetric(horizontal: pad, vertical: 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              SizedBox(height: sp * 1.6),
               Center(
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(sp * 1.3),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.favorite_rounded,
-                    size: 80,
+                    size: iconSz,
                     color: theme.colorScheme.primary,
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
-              Text('Selamat Datang', style: theme.textTheme.displayLarge),
-              const SizedBox(height: 8),
+              SizedBox(height: sp * 3.2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text('Selamat Datang', style: theme.textTheme.displayLarge),
+              ),
+              SizedBox(height: sp * 0.6),
               Text(
                 'Silakan masuk untuk memantau kesehatan Anda hari ini.',
                 style: theme.textTheme.bodyLarge,
               ),
-              const SizedBox(height: 48),
+              SizedBox(height: sp * 4),
               AppTextField(
                 label: 'Username',
                 hintText: 'Contoh: budi123',
                 controller: _usernameController,
                 prefixIcon: const Icon(Icons.person_outline),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               AppTextField(
                 label: 'Kata Sandi',
                 hintText: 'Masukkan kata sandi Anda',
@@ -133,13 +139,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: sp * 3.2),
               AppButton(
                 text: 'Masuk Sekarang',
                 onPressed: _handleLogin,
                 isLoading: _isLoading,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -156,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Daftar Sekarang',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: ResponsiveHelper.fontSize(context, 18),
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
@@ -164,9 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               const AppDivider(text: 'Atau'),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -179,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text(
                     'Lupa kata sandi?',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: ResponsiveHelper.fontSize(context, 18),
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
@@ -189,13 +195,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ChuckerFlutter.showChuckerScreen();
-        },
-        tooltip: 'Buka Chucker',
-        child: const Icon(Icons.bug_report),
       ),
     );
   }

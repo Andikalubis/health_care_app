@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/notification/presentation/pages/master_notification_list_screen.dart';
 import 'package:health_care_app/features/health/presentation/pages/health_type_list_screen.dart';
 import 'package:health_care_app/features/meal/presentation/pages/meal_type_list_screen.dart';
@@ -39,18 +40,18 @@ class _MasterDataScreenState extends State<MasterDataScreen> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Kelola Data Master',
-                style: theme.textTheme.displayLarge?.copyWith(fontSize: 26),
+                style: theme.textTheme.displayLarge?.copyWith(fontSize: ResponsiveHelper.fontSize(context, 26)),
               ),
             ),
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: ResponsiveHelper.contentPadding(context)),
               children: [
                 _buildMasterItem(
                   theme,

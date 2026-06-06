@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_model.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class MedicineFormScreen extends StatefulWidget {
   final MedicineModel? item;
@@ -78,7 +79,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
               child: Form(
                 key: _formKey,
                 child: Column(

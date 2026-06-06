@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class SOSButton extends StatelessWidget {
   final VoidCallback? onTap;
@@ -9,16 +10,17 @@ class SOSButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final sp = ResponsiveHelper.spacing(context);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(ResponsiveHelper.cardRadius(context) + 4),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(sp * 1.6),
         decoration: BoxDecoration(
           color: theme.colorScheme.error,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(ResponsiveHelper.cardRadius(context) + 4),
           boxShadow: [
             BoxShadow(
               color: theme.colorScheme.error.withValues(alpha: 0.3),
@@ -30,16 +32,16 @@ class SOSButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.warning_amber_rounded,
               color: Colors.white,
-              size: 40,
+              size: ResponsiveHelper.iconSize(context, 36),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: sp),
             Text(
               'DARURAT / SOS',
               style: GoogleFonts.outfit(
-                fontSize: 24,
+                fontSize: ResponsiveHelper.fontSize(context, 22),
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),

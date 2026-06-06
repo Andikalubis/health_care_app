@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/health/data/models/health_limit_model.dart';
 import 'package:health_care_app/features/health/data/models/health_type_model.dart';
@@ -105,7 +106,7 @@ class _HealthLimitListScreenState extends State<HealthLimitListScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context) * 0.8),
                 itemCount: _limits.length,
                 itemBuilder: (context, index) {
                   final item = _limits[index];
@@ -130,7 +131,7 @@ class _HealthLimitListScreenState extends State<HealthLimitListScreen> {
 
   Widget _buildCard(HealthLimitModel item, ThemeData theme) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: ResponsiveHelper.cardMargin(context)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: ListTile(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:health_care_app/features/health/data/models/health_limit_model.dart';
 import 'package:health_care_app/features/health/data/models/health_type_model.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class HealthLimitFormScreen extends StatefulWidget {
   final HealthLimitModel? item;
@@ -98,7 +99,7 @@ class _HealthLimitFormScreenState extends State<HealthLimitFormScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
               child: Form(
                 key: _formKey,
                 child: Column(

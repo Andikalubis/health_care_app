@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -131,19 +132,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final avatarSz = ResponsiveHelper.avatarRadius(context, 48);
+    final pad = ResponsiveHelper.contentPadding(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: 24),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Header
             CircleAvatar(
-              radius: 48,
+              radius: avatarSz,
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               child: Icon(
                 Icons.person,
-                size: 52,
+                size: ResponsiveHelper.iconSize(context, 52),
                 color: theme.colorScheme.primary,
               ),
             ),

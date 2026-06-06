@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_model.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
@@ -90,7 +91,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context) * 0.8),
                 itemCount: _items.length,
                 itemBuilder: (context, index) {
                   final item = _items[index];
@@ -113,7 +114,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
 
   Widget _buildCard(MedicineModel item, ThemeData theme) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: ResponsiveHelper.cardMargin(context)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: ListTile(

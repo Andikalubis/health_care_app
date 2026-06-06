@@ -48,8 +48,9 @@ class ReverbService {
     _isConnecting = true;
 
     if (token == null) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('ReverbService: No access token found, skipping init');
+      }
       _isConnecting = false;
       return;
     }
@@ -154,8 +155,9 @@ class ReverbService {
           : parsedData;
 
       if (notificationData is! Map) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('ReverbService: Invalid notification data format');
+        }
         return;
       }
 
@@ -220,8 +222,9 @@ class ReverbService {
         !_currentStatus.toLowerCase().contains('established')) {
       await init();
       if (_client == null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('ReverbService: Cannot subscribe, client is null');
+        }
         return;
       }
     }
@@ -303,8 +306,9 @@ class ReverbService {
     if (_client == null) return;
 
     if (!_subscriptions.containsKey(channelName)) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('ReverbService: Subscribing to public: $channelName');
+      }
       _subscriptions[channelName] = _client!.publicChannel(channelName);
       _subscriptions[channelName].subscribe();
     }
