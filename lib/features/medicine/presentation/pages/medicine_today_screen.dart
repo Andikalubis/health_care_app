@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/core/services/notification_scheduler_service.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
@@ -148,7 +149,7 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         itemCount: _doses.length,
         itemBuilder: (context, index) {
           final dose = _doses[index];
@@ -183,7 +184,7 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
           }
 
           return Card(
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: EdgeInsets.only(bottom: ResponsiveHelper.cardMargin(context)),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),

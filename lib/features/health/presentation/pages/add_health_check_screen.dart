@@ -5,6 +5,7 @@ import 'package:health_care_app/features/health/data/models/health_type_model.da
 import 'package:health_care_app/features/health/data/models/health_limit_model.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class AddHealthCheckScreen extends StatefulWidget {
   final HealthCheckModel? existing;
@@ -84,13 +85,15 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
     if (limit.dangerMin != null &&
         limit.dangerMax != null &&
         val >= limit.dangerMin! &&
-        val <= limit.dangerMax!)
+        val <= limit.dangerMax!) {
       return 'danger';
+    }
     if (limit.warningMin != null &&
         limit.warningMax != null &&
         val >= limit.warningMin! &&
-        val <= limit.warningMax!)
+        val <= limit.warningMax!) {
       return 'warning';
+    }
     return 'normal';
   }
 
@@ -149,7 +152,7 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
       body: _loadingData
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
               child: Form(
                 key: _formKey,
                 child: Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/health/presentation/pages/health_check_list_screen.dart';
 import 'package:health_care_app/features/health/presentation/pages/vital_sign_list_screen.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
@@ -49,13 +50,13 @@ class _LaporanScreenState extends State<LaporanScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              padding: EdgeInsets.fromLTRB(ResponsiveHelper.contentPadding(context), 24, ResponsiveHelper.contentPadding(context), 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Laporan Kesehatan',
-                    style: theme.textTheme.displayLarge?.copyWith(fontSize: 26),
+                    style: theme.textTheme.displayLarge?.copyWith(fontSize: ResponsiveHelper.fontSize(context, 26)),
                   ),
                   if (!_loadingPatient && _patient != null)
                     IconButton(
@@ -76,7 +77,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: ResponsiveHelper.spacing(context) * 1.3),
             TabBar(
               tabs: const [
                 Tab(icon: Icon(Icons.monitor_heart), text: 'Tanda Vital'),

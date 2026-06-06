@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class AppButton extends StatelessWidget {
   final String text;
@@ -33,11 +34,12 @@ class AppButton extends StatelessWidget {
           )
         : Text(text);
 
+    final btnHeight = ResponsiveHelper.isMobile(context) ? 52.0 : 64.0;
     ButtonStyle style = ElevatedButton.styleFrom(
       backgroundColor: backgroundColor,
       foregroundColor: foregroundColor,
-      minimumSize: width != null ? Size(width!, 56) : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      minimumSize: width != null ? Size(width!, btnHeight) : null,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ResponsiveHelper.cardRadius(context))),
     );
 
     if (icon != null && !isLoading) {

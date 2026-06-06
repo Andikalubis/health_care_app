@@ -14,8 +14,8 @@ import 'package:health_care_app/features/notification/presentation/pages/notific
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_today_screen.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/services/reverb_service.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -219,37 +219,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       body: bodyContent,
       bottomNavigationBar: _buildBottomNav(theme),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => ChuckerFlutter.showChuckerScreen(),
-        tooltip: 'Buka Chucker',
-        child: const Icon(Icons.bug_report),
-      ),
     );
   }
 
   Widget _buildAdminHomeContent(ThemeData theme) {
+    final pad = ResponsiveHelper.contentPadding(context);
+    final sp = ResponsiveHelper.spacing(context);
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(pad),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(theme),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               Text('Panel Admin', style: theme.textTheme.displayMedium),
-              const SizedBox(height: 8),
+              SizedBox(height: sp * 0.6),
               Text(
                 'Selamat datang di pusat pemantauan kesehatan.',
                 style: theme.textTheme.bodyLarge,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               _buildAdminQuickActions(theme),
-              const SizedBox(height: 40),
+              SizedBox(height: sp * 3.2),
               Text('Ringkasan Pasien', style: theme.textTheme.headlineMedium),
-              const SizedBox(height: 16),
+              SizedBox(height: sp * 1.3),
               _buildAdminStatsGrid(theme),
             ],
           ),
@@ -310,23 +307,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHomeContent(ThemeData theme) {
+    final pad = ResponsiveHelper.contentPadding(context);
+    final sp = ResponsiveHelper.spacing(context);
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(pad),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(theme),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               // SOSButton(onTap: () {}),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               Text('Kondisi Kesehatan', style: theme.textTheme.headlineMedium),
-              const SizedBox(height: 16),
+              SizedBox(height: sp * 1.3),
               _buildHealthMetricsGrid(theme),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -345,9 +344,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sp * 1.3),
               _buildMedicationList(theme),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -366,9 +365,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: sp * 1.3),
               _buildMealList(theme),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
             ],
           ),
         ),
@@ -377,22 +376,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final notifSize = ResponsiveHelper.iconSize(context, 54);
+    final iconSz = ResponsiveHelper.iconSize(context, 30);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Halo, $_userName!',
-              style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Tarik layar untuk memperbarui data',
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Halo, $_userName!',
+                  style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tarik layar untuk memperbarui data',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+          ),
         ),
         if (_userRole != 'admin')
           GestureDetector(
@@ -403,21 +410,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   builder: (_) => const NotificationListScreen(),
                 ),
               );
-              _loadDashboardData(); // Refresh count when coming back
+              _loadDashboardData();
             },
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 54,
-                  height: 54,
+                  width: notifSize,
+                  height: notifSize,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.notifications_none_rounded,
-                    size: 30,
+                    size: iconSz,
                     color: theme.colorScheme.primary,
                   ),
                 ),
@@ -426,20 +433,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     right: 0,
                     top: 0,
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(5),
                       decoration: const BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
                       ),
                       constraints: const BoxConstraints(
-                        minWidth: 22,
-                        minHeight: 22,
+                        minWidth: 20,
+                        minHeight: 20,
                       ),
                       child: Text(
                         _unreadCount > 99 ? '99+' : '$_unreadCount',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -455,13 +462,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHealthMetricsGrid(ThemeData theme) {
     final vital = _latestVital;
+    final sp = ResponsiveHelper.spacing(context);
+    final w = MediaQuery.of(context).size.width;
+    final crossAxis = w < 360 ? 1 : 2;
+    final aspectRatio = w < 360 ? 1.3 : (w < 600 ? 0.85 : 0.95);
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 0.85,
+      crossAxisCount: crossAxis,
+      mainAxisSpacing: sp,
+      crossAxisSpacing: sp,
+      childAspectRatio: aspectRatio,
       children: [
         _MetricCard(
           title: 'Detak Jantung',
@@ -532,25 +543,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     }
+    final cm = ResponsiveHelper.cardMargin(context);
+    final cr = ResponsiveHelper.cardRadius(context);
+    final avatarSz = ResponsiveHelper.avatarRadius(context, 24);
     return Column(
       children: _todayMeds.map((med) {
         return Card(
-          margin: const EdgeInsets.only(bottom: 10),
+          margin: EdgeInsets.only(bottom: cm),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(cr),
           ),
           child: ListTile(
             leading: CircleAvatar(
+              radius: avatarSz,
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-              child: Icon(Icons.medication, color: theme.colorScheme.primary),
+              child: Icon(Icons.medication, color: theme.colorScheme.primary, size: ResponsiveHelper.iconSize(context, 24)),
             ),
             title: Text(
               med.medicine?.name ?? 'Obat',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveHelper.fontSize(context, 17)),
             ),
             subtitle: Text(
               '${med.scheduleTimes?.map((t) => formatTime(t.drinkTime ?? '')).join(', ') ?? '-'}  •  ${med.dosage ?? '-'}',
-              style: const TextStyle(fontSize: 15),
+              style: TextStyle(fontSize: ResponsiveHelper.fontSize(context, 15)),
             ),
             trailing: Icon(
               Icons.chevron_right,
@@ -599,25 +614,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     }
+    final cm = ResponsiveHelper.cardMargin(context);
+    final cr = ResponsiveHelper.cardRadius(context);
+    final avatarSz = ResponsiveHelper.avatarRadius(context, 24);
     return Column(
       children: _todayMeals.map((meal) {
         return Card(
-          margin: const EdgeInsets.only(bottom: 10),
+          margin: EdgeInsets.only(bottom: cm),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(cr),
           ),
           child: ListTile(
             leading: CircleAvatar(
+              radius: avatarSz,
               backgroundColor: Colors.orange.withValues(alpha: 0.1),
-              child: const Icon(Icons.restaurant, color: Colors.orange),
+              child: Icon(Icons.restaurant, color: Colors.orange, size: ResponsiveHelper.iconSize(context, 24)),
             ),
             title: Text(
               meal.mealType?.name ?? 'Makan',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveHelper.fontSize(context, 17)),
             ),
             subtitle: Text(
               '${formatTime(meal.mealTime ?? '-')}${meal.notes != null && meal.notes!.isNotEmpty ? '  •  ${meal.notes}' : ''}',
-              style: const TextStyle(fontSize: 15),
+              style: TextStyle(fontSize: ResponsiveHelper.fontSize(context, 15)),
             ),
             trailing: const Icon(Icons.chevron_right, color: Colors.orange),
             onTap: () => Navigator.push(
@@ -669,18 +688,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
 
+    final iconSz = ResponsiveHelper.iconSize(context, 28);
     return BottomNavigationBar(
       currentIndex: _selectedIndex,
       onTap: _onItemTapped,
       selectedItemColor: theme.colorScheme.primary,
       unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
       type: BottomNavigationBarType.fixed,
-      iconSize: 32,
-      selectedLabelStyle: const TextStyle(
+      iconSize: iconSz,
+      selectedLabelStyle: TextStyle(
         fontWeight: FontWeight.bold,
-        fontSize: 16,
+        fontSize: ResponsiveHelper.fontSize(context, 14),
       ),
-      unselectedLabelStyle: const TextStyle(fontSize: 14),
+      unselectedLabelStyle: TextStyle(fontSize: ResponsiveHelper.fontSize(context, 12)),
       items: items,
     );
   }
@@ -703,27 +723,30 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sp = ResponsiveHelper.spacing(context);
+    final iconSz = ResponsiveHelper.iconSize(context, 32);
+    final cr = ResponsiveHelper.cardRadius(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(cr + 4),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(sp * 1.6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(cr + 4),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 12),
+            Icon(icon, color: color, size: iconSz),
+            SizedBox(height: sp),
             Text(
               title,
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: ResponsiveHelper.fontSize(context, 18),
               ),
             ),
             const SizedBox(height: 4),
@@ -731,7 +754,7 @@ class _ActionCard extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 color: color.withValues(alpha: 0.7),
-                fontSize: 13,
+                fontSize: ResponsiveHelper.fontSize(context, 13),
               ),
             ),
           ],
@@ -759,40 +782,46 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sp = ResponsiveHelper.spacing(context);
+    final iconSz = ResponsiveHelper.iconSize(context, 36);
+    final cr = ResponsiveHelper.cardRadius(context);
     return Container(
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(cr),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(sp * 1.3),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 40),
-          const SizedBox(height: 12),
+          Icon(icon, color: color, size: iconSz),
+          SizedBox(height: sp),
           Text(
             title,
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.w600,
-              fontSize: 15,
+              fontSize: ResponsiveHelper.fontSize(context, 15),
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+          SizedBox(height: sp * 0.5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: ResponsiveHelper.fontSize(context, 28),
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
           Text(
             unit,
-            style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 14),
+            style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: ResponsiveHelper.fontSize(context, 14)),
             textAlign: TextAlign.center,
           ),
         ],

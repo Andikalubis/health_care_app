@@ -4,6 +4,7 @@ import 'package:health_care_app/features/meal/data/models/meal_schedule_model.da
 import 'package:health_care_app/features/meal/data/models/meal_type_model.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class AddMealScheduleScreen extends StatefulWidget {
   final MealScheduleModel? existing;
@@ -116,7 +117,7 @@ class _AddMealScheduleScreenState extends State<AddMealScheduleScreen> {
       body: _loadingData
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
               child: Form(
                 key: _formKey,
                 child: Column(

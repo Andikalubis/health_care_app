@@ -3,8 +3,7 @@ import 'package:health_care_app/features/home/presentation/pages/dashboard_scree
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/core/widgets/app_button.dart';
 import 'package:health_care_app/core/widgets/app_text_field.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
-
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -94,6 +93,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final pad = ResponsiveHelper.contentPadding(context);
+    final sp = ResponsiveHelper.spacing(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -110,31 +111,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 20.0),
+          padding: EdgeInsets.symmetric(horizontal: pad, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Daftar Akun Baru', style: theme.textTheme.displayLarge),
-              const SizedBox(height: 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text('Daftar Akun Baru', style: theme.textTheme.displayLarge),
+              ),
+              SizedBox(height: sp * 0.6),
               Text(
                 'Mulai perjalanan kesehatan Anda bersama kami.',
                 style: theme.textTheme.bodyLarge,
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: sp * 3.2),
               AppTextField(
                 label: 'Nama Lengkap',
                 hintText: 'Contoh: Budi Santoso',
                 controller: _nameController,
                 prefixIcon: const Icon(Icons.person),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               AppTextField(
                 label: 'Username',
                 hintText: 'Contoh: budi123',
                 controller: _usernameController,
                 prefixIcon: const Icon(Icons.person_outline),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               AppTextField(
                 label: 'NIK',
                 hintText: 'Masukkan 16 digit NIK',
@@ -142,7 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.number,
                 prefixIcon: const Icon(Icons.badge_outlined),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               AppTextField(
                 label: 'Email (Opsional)',
                 hintText: 'budisantoso@email.com',
@@ -150,7 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: const Icon(Icons.email_outlined),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               AppTextField(
                 label: 'Kata Sandi',
                 hintText: 'Buat kata sandi aman',
@@ -170,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: sp * 2),
               AppTextField(
                 label: 'Konfirmasi Kata Sandi',
                 hintText: 'Ulangi kata sandi Anda',
@@ -178,13 +183,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: !_isPasswordVisible,
                 prefixIcon: const Icon(Icons.lock_clock_outlined),
               ),
-              const SizedBox(height: 48),
+              SizedBox(height: sp * 4),
               AppButton(
                 text: 'Daftar Sekarang',
                 onPressed: _handleRegister,
                 isLoading: _isLoading,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: sp * 2.5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -204,13 +209,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ChuckerFlutter.showChuckerScreen();
-        },
-        tooltip: 'Buka Chucker',
-        child: const Icon(Icons.bug_report),
       ),
     );
   }

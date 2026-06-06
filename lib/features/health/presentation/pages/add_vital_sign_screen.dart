@@ -3,6 +3,7 @@ import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class AddVitalSignScreen extends StatefulWidget {
   final VitalSignModel? existing;
@@ -117,7 +118,7 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Form(
           key: _formKey,
           child: Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class MedicationItem extends StatelessWidget {
   final String name;
@@ -18,13 +19,15 @@ class MedicationItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final sp = ResponsiveHelper.spacing(context);
+    final cr = ResponsiveHelper.cardRadius(context);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(sp * 1.3),
       decoration: BoxDecoration(
         color: taken
             ? theme.colorScheme.primary.withValues(alpha: 0.05)
             : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(cr),
         border: Border.all(
           color: taken
               ? theme.colorScheme.primary.withValues(alpha: 0.3)
@@ -34,7 +37,7 @@ class MedicationItem extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(sp * 0.8),
             decoration: BoxDecoration(
               color: taken
                   ? theme.colorScheme.primary
@@ -43,12 +46,13 @@ class MedicationItem extends StatelessWidget {
             ),
             child: Icon(
               Icons.medication_liquid_rounded,
+              size: ResponsiveHelper.iconSize(context, 24),
               color: taken
                   ? Colors.white
                   : theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: sp),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,13 +68,13 @@ class MedicationItem extends StatelessWidget {
             ),
           ),
           if (taken)
-            const Icon(Icons.check_circle, color: Colors.green, size: 30)
+            Icon(Icons.check_circle, color: Colors.green, size: ResponsiveHelper.iconSize(context, 30))
           else
             OutlinedButton(
               onPressed: onTakenPressed,
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(cr - 4),
                 ),
               ),
               child: const Text('Minum'),

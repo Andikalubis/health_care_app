@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/core/services/reverb_service.dart';
@@ -120,10 +121,10 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
               onRefresh: _load,
               child: ListView.builder(
                 padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  widget.showAppBar ? 16 : 80,
+                  ResponsiveHelper.contentPadding(context) * 0.8,
+                  ResponsiveHelper.contentPadding(context) * 0.8,
+                  ResponsiveHelper.contentPadding(context) * 0.8,
+                  widget.showAppBar ? ResponsiveHelper.contentPadding(context) * 0.8 : 80,
                 ),
                 itemCount: _items.length,
                 itemBuilder: (_, i) => _buildCard(_items[i], theme),
@@ -134,7 +135,7 @@ class _MealScheduleListScreenState extends State<MealScheduleListScreen> {
 
   Widget _buildCard(MealScheduleModel item, ThemeData theme) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: ResponsiveHelper.cardMargin(context)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
