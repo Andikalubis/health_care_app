@@ -13,13 +13,17 @@ mixin HealthApi on BaseApi {
   }
 
   Future<VitalSignModel> storeVitalSign(VitalSignModel model) async {
-    final res = await dio.post('/vital-signs', data: model.toJson());
-    return VitalSignModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/vital-signs', data: model.toJson());
+      return VitalSignModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan tanda vital');
   }
 
   Future<VitalSignModel> updateVitalSign(int id, VitalSignModel model) async {
-    final res = await dio.put('/vital-signs/$id', data: model.toJson());
-    return VitalSignModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/vital-signs/$id', data: model.toJson());
+      return VitalSignModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui tanda vital');
   }
 
   Future<void> deleteVitalSign(int id) async {
@@ -34,16 +38,20 @@ mixin HealthApi on BaseApi {
   }
 
   Future<HealthTypeModel> storeHealthType(HealthTypeModel model) async {
-    final res = await dio.post('/health-types', data: model.toJson());
-    return HealthTypeModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/health-types', data: model.toJson());
+      return HealthTypeModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan tipe kesehatan');
   }
 
   Future<HealthTypeModel> updateHealthType(
     int id,
     HealthTypeModel model,
   ) async {
-    final res = await dio.put('/health-types/$id', data: model.toJson());
-    return HealthTypeModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/health-types/$id', data: model.toJson());
+      return HealthTypeModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui tipe kesehatan');
   }
 
   Future<void> deleteHealthType(int id) async {
@@ -58,16 +66,20 @@ mixin HealthApi on BaseApi {
   }
 
   Future<HealthCheckModel> storeHealthCheck(HealthCheckModel model) async {
-    final res = await dio.post('/health-checks', data: model.toJson());
-    return HealthCheckModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/health-checks', data: model.toJson());
+      return HealthCheckModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan pemeriksaan kesehatan');
   }
 
   Future<HealthCheckModel> updateHealthCheck(
     int id,
     HealthCheckModel model,
   ) async {
-    final res = await dio.put('/health-checks/$id', data: model.toJson());
-    return HealthCheckModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/health-checks/$id', data: model.toJson());
+      return HealthCheckModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui pemeriksaan kesehatan');
   }
 
   Future<void> deleteHealthCheck(int id) async {
@@ -82,16 +94,20 @@ mixin HealthApi on BaseApi {
   }
 
   Future<HealthLimitModel> storeHealthLimit(HealthLimitModel model) async {
-    final res = await dio.post('/health-limits', data: model.toJson());
-    return HealthLimitModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/health-limits', data: model.toJson());
+      return HealthLimitModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan batas kesehatan');
   }
 
   Future<HealthLimitModel> updateHealthLimit(
     int id,
     HealthLimitModel model,
   ) async {
-    final res = await dio.put('/health-limits/$id', data: model.toJson());
-    return HealthLimitModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/health-limits/$id', data: model.toJson());
+      return HealthLimitModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui batas kesehatan');
   }
 
   Future<void> deleteHealthLimit(int id) async {

@@ -4,19 +4,18 @@ library;
 /// Formats an ISO 8601 datetime string (e.g. '2026-03-29T07:00:00') or a date-only
 /// string (e.g. '2026-03-29') into a human-friendly Indonesian format.
 ///
-/// - Datetime →  'Sabtu, 29 Mar 2026  07:00'
-/// - Date only →  '29 Mar 2026'
-/// - null / unparseable → '-'
+/// - Datetime ?  'Sabtu, 29 Mar 2026  07:00'
+/// - Date only ?  '29 Mar 2026'
+/// - null / unparseable ? '-'
 String formatDateTime(String? raw) {
   if (raw == null || raw.isEmpty) return '-';
-  final dt = DateTime.tryParse(raw);
-  if (dt == null) return raw; // fallback: show as-is
+  final dt = DateTime.tryParse(raw)?.toLocal();
+  if (dt == null) return raw;
 
   final day = _dayName(dt.weekday);
   final month = _monthAbbr(dt.month);
   final date = '${dt.day.toString().padLeft(2, '0')} $month ${dt.year}';
 
-  // If it contains time component, show it too
   if (raw.contains('T') || raw.contains(' ')) {
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
@@ -28,7 +27,7 @@ String formatDateTime(String? raw) {
 /// Formats an ISO datetime to short form: '29 Mar 2026, 07:00'
 String formatDateTimeShort(String? raw) {
   if (raw == null || raw.isEmpty) return '-';
-  final dt = DateTime.tryParse(raw);
+  final dt = DateTime.tryParse(raw)?.toLocal();
   if (dt == null) return raw;
 
   final month = _monthAbbr(dt.month);
@@ -42,15 +41,15 @@ String formatDateTimeShort(String? raw) {
   return date;
 }
 
-/// Formats a date-only string '1990-06-15' → '15 Juni 1990'
+/// Formats a date-only string '1990-06-15' ? '15 Juni 1990'
 String formatDateOnly(String? raw) {
   if (raw == null || raw.isEmpty) return '-';
-  final dt = DateTime.tryParse(raw);
+  final dt = DateTime.tryParse(raw)?.toLocal();
   if (dt == null) return raw;
   return '${dt.day.toString().padLeft(2, '0')} ${_monthFull(dt.month)} ${dt.year}';
 }
 
-/// Formats a time string 'HH:mm:ss' or 'HH:mm' → '07:00'
+/// Formats a time string 'HH:mm:ss' or 'HH:mm' ? '07:00'
 String formatTime(String? raw) {
   if (raw == null || raw.isEmpty) return '-';
   final parts = raw.split(':');
@@ -98,3 +97,4 @@ String _monthFull(int month) {
   ];
   return months[(month - 1).clamp(0, 11)];
 }
+

@@ -1,8 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:health_care_app/core/utils/logger.dart';
 
 class LocalNotificationService {
   static final LocalNotificationService _instance =
@@ -47,7 +47,7 @@ class LocalNotificationService {
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (details) {
-        debugPrint('Notification clicked: \${details.payload}');
+        Log.info('Notif', 'Notification clicked: ${details.payload}');
       },
     );
 
@@ -117,9 +117,7 @@ class LocalNotificationService {
     // If time is in the past, don't schedule
     if (scheduledTime.isBefore(DateTime.now())) return;
 
-    debugPrint(
-      'LocalNotificationService: Scheduling ID $id for $scheduledTime (Local: ${tz.TZDateTime.from(scheduledTime, tz.local)})',
-    );
+    Log.info('Notif', 'Scheduling ID $id for $scheduledTime (Local: ${tz.TZDateTime.from(scheduledTime, tz.local)})');
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: id,
       title: title,

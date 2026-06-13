@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/presentation/pages/login_screen.dart';
 import 'package:health_care_app/features/home/presentation/pages/dashboard_screen.dart';
 import 'package:health_care_app/core/utils/permission_helper.dart';
-import 'package:health_care_app/core/services/reverb_service.dart';
-import 'package:health_care_app/core/services/notification_scheduler_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -26,7 +23,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final prefs = await SharedPreferences.getInstance();
 
-    // Check if permissions have been requested before
     final hasRequestedPermissions =
         prefs.getBool('has_requested_permissions') ?? false;
 
@@ -40,10 +36,6 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (accessToken != null && accessToken.isNotEmpty) {
-      // Global initialization
-      ReverbService().init();
-      NotificationSchedulerService().scheduleTodayNotifications();
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const DashboardScreen()),
@@ -66,33 +58,50 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.favorite_rounded,
-                size: 100,
-                color: theme.colorScheme.primary,
-              ),
+            const RepaintBoundary(
+              child: _SplashLogo(),
             ),
             const SizedBox(height: 32),
             Text(
               'My Health',
-              style: GoogleFonts.outfit(
+              style: TextStyle(
                 fontSize: 40,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
             const SizedBox(height: 16),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SplashLogo extends StatelessWidget {
+  const _SplashLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        Icons.favorite_rounded,
+        size: 100,
+        color: theme.colorScheme.primary,
       ),
     );
   }

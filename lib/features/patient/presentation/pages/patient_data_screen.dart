@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/core/widgets/app_list_skeleton.dart';
 import 'package:health_care_app/core/widgets/date_time_picker_field.dart';
@@ -491,11 +490,12 @@ class PatientDataScreenEmbed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
           title,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+          style: theme.textTheme.headlineMedium,
         ),
       ),
       body: PatientDataScreen(forceSelfMode: forceSelfMode, hideAppBar: true),

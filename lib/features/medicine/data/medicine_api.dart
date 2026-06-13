@@ -12,13 +12,17 @@ mixin MedicineApi on BaseApi {
   }
 
   Future<MedicineModel> storeMedicine(MedicineModel model) async {
-    final res = await dio.post('/medicines', data: model.toJson());
-    return MedicineModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/medicines', data: model.toJson());
+      return MedicineModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan obat');
   }
 
   Future<MedicineModel> updateMedicine(int id, MedicineModel model) async {
-    final res = await dio.put('/medicines/$id', data: model.toJson());
-    return MedicineModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/medicines/$id', data: model.toJson());
+      return MedicineModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui obat');
   }
 
   Future<void> deleteMedicine(int id) async {
@@ -37,16 +41,20 @@ mixin MedicineApi on BaseApi {
   Future<MedicineScheduleModel> storeMedicineSchedule(
     MedicineScheduleModel model,
   ) async {
-    final res = await dio.post('/medicine-schedules', data: model.toJson());
-    return MedicineScheduleModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/medicine-schedules', data: model.toJson());
+      return MedicineScheduleModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan jadwal obat');
   }
 
   Future<MedicineScheduleModel> updateMedicineSchedule(
     int id,
     MedicineScheduleModel model,
   ) async {
-    final res = await dio.put('/medicine-schedules/$id', data: model.toJson());
-    return MedicineScheduleModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/medicine-schedules/$id', data: model.toJson());
+      return MedicineScheduleModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui jadwal obat');
   }
 
   Future<void> deleteMedicineSchedule(int id) async {

@@ -11,13 +11,17 @@ mixin MealApi on BaseApi {
   }
 
   Future<MealTypeModel> storeMealType(MealTypeModel model) async {
-    final res = await dio.post('/meal-types', data: model.toJson());
-    return MealTypeModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/meal-types', data: model.toJson());
+      return MealTypeModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan tipe makanan');
   }
 
   Future<MealTypeModel> updateMealType(int id, MealTypeModel model) async {
-    final res = await dio.put('/meal-types/$id', data: model.toJson());
-    return MealTypeModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/meal-types/$id', data: model.toJson());
+      return MealTypeModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui tipe makanan');
   }
 
   Future<void> deleteMealType(int id) async {
@@ -32,16 +36,20 @@ mixin MealApi on BaseApi {
   }
 
   Future<MealScheduleModel> storeMealSchedule(MealScheduleModel model) async {
-    final res = await dio.post('/meal-schedules', data: model.toJson());
-    return MealScheduleModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/meal-schedules', data: model.toJson());
+      return MealScheduleModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan jadwal makan');
   }
 
   Future<MealScheduleModel> updateMealSchedule(
     int id,
     MealScheduleModel model,
   ) async {
-    final res = await dio.put('/meal-schedules/$id', data: model.toJson());
-    return MealScheduleModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/meal-schedules/$id', data: model.toJson());
+      return MealScheduleModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui jadwal makan');
   }
 
   Future<void> deleteMealSchedule(int id) async {

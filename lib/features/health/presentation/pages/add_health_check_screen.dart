@@ -38,11 +38,11 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
       _valueCtrl.text = e.resultValue?.toString() ?? '';
       _notesCtrl.text = e.notes ?? '';
       _checkTimeCtrl.text =
-          e.checkTime ?? DateTime.now().toIso8601String().substring(0, 19);
+          e.checkTime ?? DateTime.now().toUtc().toIso8601String();
       _selectedPatientId = e.patientId;
       _selectedHealthTypeId = e.healthTypeId;
     } else {
-      _checkTimeCtrl.text = DateTime.now().toIso8601String().substring(0, 19);
+      _checkTimeCtrl.text = DateTime.now().toUtc().toIso8601String();
     }
     _loadData();
   }
@@ -254,3 +254,4 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
     );
   }
 }
+

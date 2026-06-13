@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:health_care_app/features/home/presentation/pages/dashboard_screen.dart';
-import 'package:health_care_app/core/services/reverb_service.dart';
-import 'package:health_care_app/core/services/notification_scheduler_service.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/core/widgets/app_button.dart';
 import 'package:health_care_app/core/widgets/app_text_field.dart';
@@ -41,10 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await _apiService.login(username, password);
 
       if (mounted) {
-        // Global initialization after login
-        ReverbService().init();
-        NotificationSchedulerService().scheduleTodayNotifications();
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Selamat datang, ${response.user.name}!')),
         );

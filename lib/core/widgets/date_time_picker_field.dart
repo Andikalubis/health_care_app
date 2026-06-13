@@ -30,7 +30,7 @@ class DatePickerField extends StatelessWidget {
     if (!enabled) return;
     DateTime init;
     if (controller.text.isNotEmpty) {
-      init = DateTime.tryParse(controller.text) ?? DateTime.now();
+      init = (DateTime.tryParse(controller.text) ?? DateTime.now()).toLocal();
     } else {
       init = initialDate ?? DateTime.now();
     }
@@ -41,10 +41,7 @@ class DatePickerField extends StatelessWidget {
       lastDate: lastDate ?? DateTime(2100),
     );
     if (picked != null) {
-      final val =
-          '${picked.year.toString().padLeft(4, '0')}-'
-          '${picked.month.toString().padLeft(2, '0')}-'
-          '${picked.day.toString().padLeft(2, '0')}';
+      final val = '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
       controller.text = val;
       if (onChanged != null) onChanged!(val);
     }
@@ -64,7 +61,7 @@ class DatePickerField extends StatelessWidget {
       ),
       validator:
           validator ??
-          (v) => (v == null || v.isEmpty) ? '$label wajib diisi' : null,
+          (v) => (v == null || v.isEmpty) ? ' wajib diisi' : null,
     );
   }
 }
@@ -105,7 +102,6 @@ class TimePickerField extends StatelessWidget {
       context: context,
       initialTime: init,
       builder: (context, child) {
-        // Force 24-hour display
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
           child: child!,
@@ -113,9 +109,7 @@ class TimePickerField extends StatelessWidget {
       },
     );
     if (picked != null) {
-      controller.text =
-          '${picked.hour.toString().padLeft(2, '0')}:'
-          '${picked.minute.toString().padLeft(2, '0')}:00';
+      controller.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00';
     }
   }
 
@@ -133,14 +127,14 @@ class TimePickerField extends StatelessWidget {
       ),
       validator:
           validator ??
-          (v) => (v == null || v.isEmpty) ? '$label wajib diisi' : null,
+          (v) => (v == null || v.isEmpty) ? ' wajib diisi' : null,
     );
   }
 }
 
 /// A read-only [TextFormField] that opens a combined date + time picker on tap.
-/// Stored value is ISO 8601: 'yyyy-MM-ddTHH:mm:00'.
-/// Displayed value: 'dd/MM/yyyy HH:mm'.
+/// Stored value is ISO 8601 UTC: 'yyyy-MM-ddTHH:mm:ss.000Z' (e.g. '2026-06-14T11:55:00.000Z').
+/// Displayed value: 'dd/MM/yyyy HH:mm' automatically converted to device local time via toLocal().
 class DateTimePickerField extends StatelessWidget {
   const DateTimePickerField({
     super.key,
@@ -165,7 +159,7 @@ class DateTimePickerField extends StatelessWidget {
     if (!enabled) return;
     DateTime init = DateTime.now();
     if (controller.text.isNotEmpty) {
-      init = DateTime.tryParse(controller.text) ?? DateTime.now();
+      init = (DateTime.tryParse(controller.text) ?? DateTime.now()).toLocal();
     }
     final pickedDate = await showDatePicker(
       context: context,
@@ -194,13 +188,11 @@ class DateTimePickerField extends StatelessWidget {
       pickedTime.hour,
       pickedTime.minute,
     );
-    // Store as full ISO for API
-    controller.text = combined.toIso8601String().substring(0, 19);
+    controller.text = combined.toUtc().toIso8601String();
   }
 
-  /// Returns display text from the ISO value stored in controller.
   static String _displayText(String isoValue) {
-    final dt = DateTime.tryParse(isoValue);
+    final dt = DateTime.tryParse(isoValue)?.toLocal();
     if (dt == null) return isoValue;
     return '${dt.day.toString().padLeft(2, '0')}/'
         '${dt.month.toString().padLeft(2, '0')}/'
@@ -236,3 +228,5 @@ class DateTimePickerField extends StatelessWidget {
     );
   }
 }
+
+

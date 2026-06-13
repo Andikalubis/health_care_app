@@ -401,7 +401,7 @@ class MedicalRecordPdfService {
   }
 
   String _formatDateOnly(String raw) {
-    final dt = DateTime.tryParse(raw);
+    final dt = DateTime.tryParse(raw)?.toLocal();
     if (dt == null) return raw;
     const months = [
       'Jan',
@@ -422,7 +422,7 @@ class MedicalRecordPdfService {
 
   String _formatDateShort(String? raw) {
     if (raw == null || raw.isEmpty) return '-';
-    final dt = DateTime.tryParse(raw);
+    final dt = DateTime.tryParse(raw)?.toLocal();
     if (dt == null) return raw;
     const months = [
       'Jan',
@@ -454,3 +454,4 @@ class MedicalRecordPdfService {
     }
   }
 }
+

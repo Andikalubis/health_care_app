@@ -31,8 +31,7 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
   @override
   void initState() {
     super.initState();
-    // Default check_time to now
-    _checkTimeCtrl.text = DateTime.now().toIso8601String().substring(0, 19);
+    _checkTimeCtrl.text = DateTime.now().toUtc().toIso8601String();
     _loadPatients();
     if (widget.existing != null) {
       final e = widget.existing!;

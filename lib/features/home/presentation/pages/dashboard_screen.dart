@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 import 'package:health_care_app/features/home/presentation/pages/jadwal_screen.dart';
@@ -14,7 +14,8 @@ import 'package:health_care_app/features/notification/presentation/pages/notific
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_today_screen.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'package:health_care_app/core/services/reverb_service.dart';
-import 'package:flutter/foundation.dart';
+import 'package:health_care_app/core/services/notification_scheduler_service.dart';
+import 'package:health_care_app/core/utils/logger.dart';
 import 'package:health_care_app/core/utils/responsive_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -33,75 +34,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
   VitalSignModel? _latestVital;
   List<MedicineScheduleModel> _todayMeds = [];
   List<MealScheduleModel> _todayMeals = [];
-  bool _loadingVital = true;
-  bool _loadingMeds = true;
-  bool _loadingMeals = true;
+  bool _isLoading = true;
   int _unreadCount = 0;
+  bool _realtimeInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
-    _loadDashboardData();
   }
 
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() {
-        _userName = prefs.getString('user_name') ?? 'Tamu';
-        _userRole = prefs.getString('user_role') ?? 'user';
-      });
-      _initRealtime(prefs.getInt('user_id'), _userRole);
+      _userName = prefs.getString('user_name') ?? 'Tamu';
+      _userRole = prefs.getString('user_role') ?? 'user';
+      _lazyInitRealtime(prefs.getInt('user_id'), _userRole);
+      _loadDashboardData();
     }
   }
 
-  void _initRealtime(int? userId, String role) async {
+  void _lazyInitRealtime(int? userId, String role) async {
+    if (_realtimeInitialized) return;
+    _realtimeInitialized = true;
+
+    NotificationSchedulerService().scheduleTodayNotifications();
+
     final realtime = ReverbService();
     await realtime.init();
 
     if (userId != null && role != 'admin') {
       // Subscribe to patient specific updates
       realtime.subscribePrivate('patient.$userId', 'vital.updated', (_) {
-        if (kDebugMode) print('Dashboard: Vital updated, refreshing...');
+        Log.info('Dashboard', 'Vital updated, refreshing...');
         _loadDashboardData();
       });
       realtime.subscribePrivate(
         'patient.$userId',
         'medicine.schedule.updated',
         (_) {
-          if (kDebugMode) {
-            print('Dashboard: Med schedule updated, refreshing...');
-          }
+          Log.info('Dashboard', 'Med schedule updated, refreshing...');
           _loadDashboardData();
         },
       );
       realtime.subscribePrivate('patient.$userId', 'meal.schedule.updated', (
         _,
       ) {
-        if (kDebugMode) {
-          print('Dashboard: Meal schedule updated, refreshing...');
-        }
+        Log.info('Dashboard', 'Meal schedule updated, refreshing...');
         _loadDashboardData();
       });
       realtime.subscribePrivate('patient.$userId', 'health.check.updated', (_) {
-        if (kDebugMode) {
-          print('Dashboard: Health check updated, refreshing...');
-        }
+        Log.info('Dashboard', 'Health check updated, refreshing...');
         _loadDashboardData();
       });
       realtime.subscribePrivate('patient.$userId', 'medicine.stock.updated', (
         _,
       ) {
-        if (kDebugMode) {
-          print('Dashboard: Stock updated, refreshing...');
-        }
+        Log.info('Dashboard', 'Stock updated, refreshing...');
         _loadDashboardData();
       });
 
       // Subscribe to user notifications
       realtime.subscribePrivate('user.$userId', 'notification.created', (_) {
-        if (kDebugMode) print('Dashboard: New notification received!');
+        Log.info('Dashboard', 'New notification received!');
         _loadDashboardData(); // Refresh everything including unread count
       });
     }
@@ -136,54 +131,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadDashboardData() async {
-    // Load latest vital sign
-    try {
-      final vitals = await _api.getVitalSigns();
-      if (mounted && vitals.isNotEmpty) {
-        setState(() {
-          _latestVital = vitals.first;
-          _loadingVital = false;
-        });
-      } else {
-        if (mounted) setState(() => _loadingVital = false);
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loadingVital = false);
-    }
+    _isLoading = true;
+    VitalSignModel? vital;
+    List<MedicineScheduleModel> meds = [];
+    List<MealScheduleModel> meals = [];
+    int unreadCount = 0;
 
-    // Load today's medication schedule
     try {
-      final meds = await _api.getMedicineSchedules();
-      if (mounted) {
-        setState(() {
-          _todayMeds = meds.take(3).toList();
-          _loadingMeds = false;
-        });
+      final results = await Future.wait([
+        _api.cachedGet('vital_signs', () => _api.getVitalSigns()),
+        _api.cachedGet('medicine_schedules', () => _api.getMedicineSchedules()),
+        _api.cachedGet('today_meals', () => _api.getTodayMeals()),
+        if (_userRole != 'admin')
+          _api.getUnreadNotificationCount(),
+      ]);
+      vital = (results[0] as List<VitalSignModel>).isNotEmpty
+          ? (results[0] as List<VitalSignModel>).first
+          : null;
+      meds = (results[1] as List<MedicineScheduleModel>).take(3).toList();
+      meals = (results[2] as List<MealScheduleModel>).take(3).toList();
+      if (_userRole != 'admin' && results.length > 3) {
+        unreadCount = results[3] as int;
       }
-    } catch (_) {
-      if (mounted) setState(() => _loadingMeds = false);
-    }
+    } catch (_) {}
 
-    // Load today's meal schedule
-    try {
-      final meals = await _api.getTodayMeals();
-      if (mounted) {
-        setState(() {
-          _todayMeals = meals.take(3).toList();
-          _loadingMeals = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loadingMeals = false);
-    }
-
-    // Load and schedule today's notifications (Now handled by Backend for persistence)
-    if (_userRole != 'admin') {
-      // Load unread notification count
-      try {
-        final count = await _api.getUnreadNotificationCount();
-        if (mounted) setState(() => _unreadCount = count);
-      } catch (_) {}
+    if (mounted) {
+      setState(() {
+        _latestVital = vital;
+        _todayMeds = meds;
+        _todayMeals = meals;
+        _unreadCount = unreadCount;
+        _isLoading = false;
+      });
     }
   }
 
@@ -227,7 +206,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final sp = ResponsiveHelper.spacing(context);
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _loadDashboardData,
+        onRefresh: () async {
+          _api.invalidateCache();
+          await _loadDashboardData();
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.all(pad),
@@ -311,7 +293,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final sp = ResponsiveHelper.spacing(context);
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _loadDashboardData,
+        onRefresh: () async {
+          _api.invalidateCache();
+          await _loadDashboardData();
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.all(pad),
@@ -410,6 +395,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   builder: (_) => const NotificationListScreen(),
                 ),
               );
+              _api.invalidateCache();
               _loadDashboardData();
             },
             child: Stack(
@@ -466,52 +452,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final w = MediaQuery.of(context).size.width;
     final crossAxis = w < 360 ? 1 : 2;
     final aspectRatio = w < 360 ? 1.3 : (w < 600 ? 0.85 : 0.95);
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: crossAxis,
-      mainAxisSpacing: sp,
-      crossAxisSpacing: sp,
-      childAspectRatio: aspectRatio,
-      children: [
-        _MetricCard(
-          title: 'Detak Jantung',
-          value: _loadingVital ? '...' : (vital?.heartRate?.toString() ?? '-'),
-          unit: 'BPM',
-          icon: Icons.favorite,
-          color: Colors.redAccent,
-        ),
-        _MetricCard(
-          title: 'Tekanan Darah',
-          value: _loadingVital ? '...' : (vital?.bloodPressure ?? '-'),
-          unit: 'mmHg',
-          icon: Icons.speed,
-          color: Colors.blueAccent,
-        ),
-        _MetricCard(
-          title: 'Saturasi O₂',
-          value: _loadingVital
-              ? '...'
-              : (vital?.oxygenLevel?.toString() ?? '-'),
-          unit: '%',
-          icon: Icons.bloodtype,
-          color: const Color(0xFF00796B),
-        ),
-        _MetricCard(
-          title: 'Suhu Tubuh',
-          value: _loadingVital
-              ? '...'
-              : (vital?.bodyTemperature?.toString() ?? '-'),
-          unit: '°C',
-          icon: Icons.thermostat,
-          color: Colors.orange,
-        ),
-      ],
+    return RepaintBoundary(
+      child: GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: crossAxis,
+        mainAxisSpacing: sp,
+        crossAxisSpacing: sp,
+        childAspectRatio: aspectRatio,
+        children: [
+          _MetricCard(
+            title: 'Detak Jantung',
+            value: _isLoading ? '...' : (vital?.heartRate?.toString() ?? '-'),
+            unit: 'BPM',
+            icon: Icons.favorite,
+            color: Colors.redAccent,
+          ),
+          _MetricCard(
+            title: 'Tekanan Darah',
+            value: _isLoading ? '...' : (vital?.bloodPressure ?? '-'),
+            unit: 'mmHg',
+            icon: Icons.speed,
+            color: Colors.blueAccent,
+          ),
+          _MetricCard(
+            title: 'Saturasi O₂',
+            value: _isLoading ? '...' : (vital?.oxygenLevel?.toString() ?? '-'),
+            unit: '%',
+            icon: Icons.bloodtype,
+            color: const Color(0xFF00796B),
+          ),
+          _MetricCard(
+            title: 'Suhu Tubuh',
+            value: _isLoading ? '...' : (vital?.bodyTemperature?.toString() ?? '-'),
+            unit: '°C',
+            icon: Icons.thermostat,
+            color: Colors.orange,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildMedicationList(ThemeData theme) {
-    if (_loadingMeds) {
+    if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_todayMeds.isEmpty) {
@@ -582,7 +566,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMealList(ThemeData theme) {
-    if (_loadingMeals) {
+    if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_todayMeals.isEmpty) {
@@ -764,7 +748,7 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-// ─── Internal metric card widget ────────────────────────────────────────────
+// --- Internal metric card widget ---
 class _MetricCard extends StatelessWidget {
   final String title;
   final String value;

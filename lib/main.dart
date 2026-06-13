@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:health_care_app/core/theme/app_theme.dart';
 import 'package:health_care_app/features/splash/presentation/pages/splash_screen.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:health_care_app/features/error/presentation/pages/not_found_page.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
 
@@ -14,7 +13,6 @@ void main() async {
   await notificationService.init();
   await notificationService.requestPermissions();
 
-  ChuckerFlutter.showOnRelease = true;
   runApp(const MyApp());
 }
 
@@ -28,11 +26,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'My Health',
       navigatorKey: navigatorKey,
-      navigatorObservers: [ChuckerFlutter.navigatorObserver],
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
       onUnknownRoute: (settings) {
         return MaterialPageRoute(builder: (context) => const NotFoundPage());
