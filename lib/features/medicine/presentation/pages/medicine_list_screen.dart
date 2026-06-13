@@ -130,7 +130,9 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
           item.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: item.description != null ? Text(item.description!) : null,
+        subtitle: Text(
+          '${item.unit}${item.description != null ? ' — ${item.description}' : ''}',
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

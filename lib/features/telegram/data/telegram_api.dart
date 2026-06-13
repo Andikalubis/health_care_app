@@ -14,16 +14,20 @@ mixin TelegramApi on BaseApi {
   }
 
   Future<TelegramUserModel> storeTelegramUser(TelegramUserModel model) async {
-    final res = await dio.post('/telegram-users', data: model.toJson());
-    return TelegramUserModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/telegram-users', data: model.toJson());
+      return TelegramUserModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan user Telegram');
   }
 
   Future<TelegramUserModel> updateTelegramUser(
     int id,
     TelegramUserModel model,
   ) async {
-    final res = await dio.put('/telegram-users/$id', data: model.toJson());
-    return TelegramUserModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/telegram-users/$id', data: model.toJson());
+      return TelegramUserModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui user Telegram');
   }
 
   Future<void> deleteTelegramUser(int id) async {

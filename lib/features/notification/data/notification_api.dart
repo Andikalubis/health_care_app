@@ -69,19 +69,20 @@ mixin NotificationApi on BaseApi {
   Future<MasterNotificationModel> storeMasterNotification(
     MasterNotificationModel model,
   ) async {
-    final res = await dio.post('/master-notifications', data: model.toJson());
-    return MasterNotificationModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/master-notifications', data: model.toJson());
+      return MasterNotificationModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan notifikasi');
   }
 
   Future<MasterNotificationModel> updateMasterNotification(
     int id,
     MasterNotificationModel model,
   ) async {
-    final res = await dio.put(
-      '/master-notifications/$id',
-      data: model.toJson(),
-    );
-    return MasterNotificationModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/master-notifications/$id', data: model.toJson());
+      return MasterNotificationModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui notifikasi');
   }
 
   Future<void> deleteMasterNotification(int id) async {

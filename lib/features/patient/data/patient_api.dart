@@ -12,16 +12,20 @@ mixin PatientApi on BaseApi {
   }
 
   Future<PatientDataModel> storePatientData(PatientDataModel model) async {
-    final res = await dio.post('/patient-data', data: model.toJson());
-    return PatientDataModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.post('/patient-data', data: model.toJson());
+      return PatientDataModel.fromJson(unwrap(res));
+    }, 'Gagal menyimpan data pasien');
   }
 
   Future<PatientDataModel> updatePatientData(
     int id,
     PatientDataModel model,
   ) async {
-    final res = await dio.put('/patient-data/$id', data: model.toJson());
-    return PatientDataModel.fromJson(unwrap(res));
+    return safeApiCall(() async {
+      final res = await dio.put('/patient-data/$id', data: model.toJson());
+      return PatientDataModel.fromJson(unwrap(res));
+    }, 'Gagal memperbarui data pasien');
   }
 
   Future<void> deletePatientData(int id) async {

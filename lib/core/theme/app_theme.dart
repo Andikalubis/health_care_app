@@ -2,13 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF1976D2); // Modern Blue
-  static const Color accentColor = Color(0xFF03A9F4); // Light Blue
-  static const Color lightBackground = Color(
-    0xFFF8FAFC,
-  ); // Very light grey/white
-  static const Color darkBackground = Color(0xFF0F172A); // Deep Slate
-  static const Color errorColor = Color(0xFFD32F2F); // Red
+  static const Color primaryColor = Color(0xFF1976D2);
+  static const Color accentColor = Color(0xFF03A9F4);
+  static const Color lightBackground = Color(0xFFF8FAFC);
+  static const Color darkBackground = Color(0xFF0F172A);
+  static const Color errorColor = Color(0xFFD32F2F);
+
+  static final TextStyle _outfitDisplayLarge = GoogleFonts.outfit(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    color: primaryColor,
+  );
+  static TextStyle _outfitHeadlineMedium(Color onSurface) => GoogleFonts.outfit(
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    color: onSurface,
+  );
+  static TextStyle _outfitBodyLarge(Color onSurface) => GoogleFonts.outfit(
+    fontSize: 20,
+    color: onSurface,
+  );
+  static TextStyle _outfitBodyMedium(Color onSurface) => GoogleFonts.outfit(
+    fontSize: 18,
+    color: onSurface.withValues(alpha: 0.7),
+  );
+  static final TextStyle _outfitLabelLarge = GoogleFonts.outfit(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
 
   static ThemeData get lightTheme {
     return _buildTheme(
@@ -50,26 +72,11 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: background,
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.outfit(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: primary,
-        ),
-        headlineMedium: GoogleFonts.outfit(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: onSurface,
-        ),
-        bodyLarge: GoogleFonts.outfit(fontSize: 20, color: onSurface),
-        bodyMedium: GoogleFonts.outfit(
-          fontSize: 18,
-          color: onSurface.withValues(alpha: 0.7),
-        ),
-        labelLarge: GoogleFonts.outfit(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
+        displayLarge: _outfitDisplayLarge.copyWith(color: primary),
+        headlineMedium: _outfitHeadlineMedium(onSurface),
+        bodyLarge: _outfitBodyLarge(onSurface),
+        bodyMedium: _outfitBodyMedium(onSurface),
+        labelLarge: _outfitLabelLarge,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -89,10 +96,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: primary, width: 2.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 20,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         hintStyle: TextStyle(
           fontSize: 18,
           color: onSurface.withValues(alpha: 0.5),
@@ -106,10 +110,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
     );

@@ -18,6 +18,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
 
   late TextEditingController _nameCtrl;
   late TextEditingController _descCtrl;
+  late TextEditingController _unitCtrl;
   bool _isLoading = false;
 
   @override
@@ -25,12 +26,14 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.item?.name);
     _descCtrl = TextEditingController(text: widget.item?.description);
+    _unitCtrl = TextEditingController(text: widget.item?.unit ?? 'tablet');
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
+    _unitCtrl.dispose();
     super.dispose();
   }
 
@@ -44,6 +47,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
         description: _descCtrl.text.trim().isEmpty
             ? null
             : _descCtrl.text.trim(),
+        unit: _unitCtrl.text.trim().isEmpty ? 'tablet' : _unitCtrl.text.trim(),
       );
 
       if (widget.item == null) {
@@ -57,9 +61,14 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -102,6 +111,18 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                         labelText: 'Keterangan / Deskripsi',
                         border: OutlineInputBorder(),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _unitCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Satuan',
+                        border: OutlineInputBorder(),
+                        hintText: 'Contoh: tablet, kapsul, ml, sachet',
+                        prefixIcon: Icon(Icons.scale),
+                      ),
+                      validator: (v) =>
+                          v!.trim().isEmpty ? 'Satuan wajib diisi' : null,
                     ),
                     const SizedBox(height: 32),
                     Center(

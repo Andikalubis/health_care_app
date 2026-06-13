@@ -65,6 +65,12 @@ class MedicineDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInfoRow(
+              Icons.scale,
+              'Satuan',
+              medicine.unit,
+            ),
+            const SizedBox(height: 20),
+            _buildInfoRow(
               Icons.description_outlined,
               'Keterangan / Deskripsi',
               medicine.description ?? 'Tidak ada deskripsi',

@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:health_care_app/core/services/notification_service.dart';
+import 'package:health_care_app/core/utils/logger.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
 
 class NotificationSchedulerService {
@@ -13,13 +13,8 @@ class NotificationSchedulerService {
 
   Future<void> scheduleTodayNotifications() async {
     try {
-      if (kDebugMode) {
-        print('NotificationSchedulerService: Fetching today doses...');
-      }
+      Log.info('Notif', 'Fetching today doses...');
       final doses = await _api.getTodayDoses();
-
-      // Cancel existing schedules to avoid duplicates
-      // await _notificationService.cancelAllNotifications();
 
       for (var dose in doses) {
         final status = dose['status'];
@@ -29,13 +24,9 @@ class NotificationSchedulerService {
             int scheduleId = dose['schedule']['id'];
             int timeId = dose['schedule_time']['id'];
             int notificationId =
-                scheduleId * 1000 + timeId; // Unique ID per dose time
+                scheduleId * 1000 + timeId;
 
-            if (kDebugMode) {
-              print(
-                'NotificationSchedulerService: Scheduling ID $notificationId for ${dose['schedule']['medicine']['name']} at $scheduledTime',
-              );
-            }
+            Log.info('Notif', 'Scheduling ID $notificationId for ${dose['schedule']['medicine']['name']} at $scheduledTime');
 
             await _notificationService.scheduleNotification(
               id: notificationId,
@@ -49,9 +40,7 @@ class NotificationSchedulerService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('NotificationSchedulerService: Error scheduling: $e');
-      }
+      Log.error('Notif', 'Error scheduling: $e');
     }
   }
 }
