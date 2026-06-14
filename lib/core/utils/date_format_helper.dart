@@ -9,7 +9,7 @@ library;
 /// - null / unparseable ? '-'
 String formatDateTime(String? raw) {
   if (raw == null || raw.isEmpty) return '-';
-  final dt = DateTime.tryParse(raw)?.toLocal();
+  final dt = DateTime.tryParse(_ensureUtc(raw))?.toLocal();
   if (dt == null) return raw;
 
   final day = _dayName(dt.weekday);
@@ -27,7 +27,7 @@ String formatDateTime(String? raw) {
 /// Formats an ISO datetime to short form: '29 Mar 2026, 07:00'
 String formatDateTimeShort(String? raw) {
   if (raw == null || raw.isEmpty) return '-';
-  final dt = DateTime.tryParse(raw)?.toLocal();
+  final dt = DateTime.tryParse(_ensureUtc(raw))?.toLocal();
   if (dt == null) return raw;
 
   final month = _monthAbbr(dt.month);
@@ -44,7 +44,7 @@ String formatDateTimeShort(String? raw) {
 /// Formats a date-only string '1990-06-15' ? '15 Juni 1990'
 String formatDateOnly(String? raw) {
   if (raw == null || raw.isEmpty) return '-';
-  final dt = DateTime.tryParse(raw)?.toLocal();
+  final dt = DateTime.tryParse(raw);
   if (dt == null) return raw;
   return '${dt.day.toString().padLeft(2, '0')} ${_monthFull(dt.month)} ${dt.year}';
 }
@@ -55,6 +55,14 @@ String formatTime(String? raw) {
   final parts = raw.split(':');
   if (parts.length < 2) return raw;
   return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
+}
+
+/// If [raw] contains time info but no timezone indicator (no 'Z', no '+/-'),
+/// treat it as UTC by appending 'Z'. Date-only strings are left unchanged.
+String _ensureUtc(String raw) {
+  final hasTime = raw.contains('T') || raw.contains(' ');
+  final hasTz = raw.endsWith('Z') || RegExp(r'[+-]\d{2}:\d{2}').hasMatch(raw);
+  return hasTime && !hasTz ? '${raw}Z' : raw;
 }
 
 String _dayName(int weekday) {

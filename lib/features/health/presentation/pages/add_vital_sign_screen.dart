@@ -31,7 +31,7 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
   @override
   void initState() {
     super.initState();
-    _checkTimeCtrl.text = DateTime.now().toUtc().toIso8601String();
+    _checkTimeCtrl.text = _localNowIso();
     _loadPatients();
     if (widget.existing != null) {
       final e = widget.existing!;
@@ -58,6 +58,15 @@ class _AddVitalSignScreenState extends State<AddVitalSignScreen> {
         });
       }
     } catch (_) {}
+  }
+
+  String _localNowIso() {
+    final now = DateTime.now();
+    final tz = now.timeZoneOffset;
+    final sign = tz.isNegative ? '-' : '+';
+    return '${now.toIso8601String().split('.').first}.000$sign'
+        '${tz.inHours.abs().toString().padLeft(2, '0')}:'
+        '${(tz.inMinutes.abs() % 60).toString().padLeft(2, '0')}';
   }
 
   @override

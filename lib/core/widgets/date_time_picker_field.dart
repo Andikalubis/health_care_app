@@ -188,7 +188,11 @@ class DateTimePickerField extends StatelessWidget {
       pickedTime.hour,
       pickedTime.minute,
     );
-    controller.text = combined.toUtc().toIso8601String();
+    final offset = DateTime.now().timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final oh = offset.inHours.abs().toString().padLeft(2, '0');
+    final om = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    controller.text = '${combined.toIso8601String()}$sign$oh:$om';
   }
 
   static String _displayText(String isoValue) {

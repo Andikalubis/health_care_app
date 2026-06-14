@@ -37,14 +37,22 @@ class _AddHealthCheckScreenState extends State<AddHealthCheckScreen> {
       final e = widget.existing!;
       _valueCtrl.text = e.resultValue?.toString() ?? '';
       _notesCtrl.text = e.notes ?? '';
-      _checkTimeCtrl.text =
-          e.checkTime ?? DateTime.now().toUtc().toIso8601String();
+      _checkTimeCtrl.text = e.checkTime ?? _localNowIso();
       _selectedPatientId = e.patientId;
       _selectedHealthTypeId = e.healthTypeId;
     } else {
-      _checkTimeCtrl.text = DateTime.now().toUtc().toIso8601String();
+      _checkTimeCtrl.text = _localNowIso();
     }
     _loadData();
+  }
+
+  String _localNowIso() {
+    final now = DateTime.now();
+    final tz = now.timeZoneOffset;
+    final sign = tz.isNegative ? '-' : '+';
+    return '${now.toIso8601String().split('.').first}.000$sign'
+        '${tz.inHours.abs().toString().padLeft(2, '0')}:'
+        '${(tz.inMinutes.abs() % 60).toString().padLeft(2, '0')}';
   }
 
   Future<void> _loadData() async {

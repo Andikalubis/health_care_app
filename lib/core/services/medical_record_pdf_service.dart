@@ -401,7 +401,7 @@ class MedicalRecordPdfService {
   }
 
   String _formatDateOnly(String raw) {
-    final dt = DateTime.tryParse(raw)?.toLocal();
+    final dt = DateTime.tryParse(_ensureUtc(raw))?.toLocal();
     if (dt == null) return raw;
     const months = [
       'Jan',
@@ -422,7 +422,7 @@ class MedicalRecordPdfService {
 
   String _formatDateShort(String? raw) {
     if (raw == null || raw.isEmpty) return '-';
-    final dt = DateTime.tryParse(raw)?.toLocal();
+    final dt = DateTime.tryParse(_ensureUtc(raw))?.toLocal();
     if (dt == null) return raw;
     const months = [
       'Jan',
@@ -439,6 +439,12 @@ class MedicalRecordPdfService {
       'Des',
     ];
     return '${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}';
+  }
+
+  String _ensureUtc(String raw) {
+    final hasTime = raw.contains('T') || raw.contains(' ');
+    final hasTz = raw.endsWith('Z') || RegExp(r'[+-]\d{2}:\d{2}').hasMatch(raw);
+    return hasTime && !hasTz ? '${raw}Z' : raw;
   }
 
   String _statusLabel(String? status) {

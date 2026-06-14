@@ -26,7 +26,6 @@ class LocalNotificationService {
         ? tzName
         : tzName.toString().split('(')[1].split(',')[0];
     tz.setLocalLocation(tz.getLocation(timeZoneName.trim()));
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');

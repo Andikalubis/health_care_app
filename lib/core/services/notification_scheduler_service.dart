@@ -1,6 +1,7 @@
 import 'package:health_care_app/core/services/notification_service.dart';
 import 'package:health_care_app/core/utils/logger.dart';
 import 'package:health_care_app/features/auth/data/api_service.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationSchedulerService {
   static final NotificationSchedulerService _instance =
@@ -54,14 +55,24 @@ class NotificationSchedulerService {
     for (var meal in meals) {
       if (meal.mealTime == null || meal.id == null) continue;
 
-      final now = DateTime.now();
-      final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
       final mealTimeStr = meal.mealTime!;
-      final scheduledTime = mealTimeStr.contains('T') || mealTimeStr.contains(' ')
-          ? DateTime.parse(mealTimeStr)
-          : DateTime.parse('$todayStr $mealTimeStr');
+      final parts = mealTimeStr.split(':');
+      if (parts.length < 2) continue;
 
-      if (scheduledTime.isAfter(now)) {
+      // meal_time is stored as Asia/Jakarta wall-clock time on the server
+      final jakarta = tz.getLocation('Asia/Jakarta');
+      final nowJakarta = tz.TZDateTime.now(jakarta);
+      final scheduledInJakarta = tz.TZDateTime(
+        jakarta,
+        nowJakarta.year,
+        nowJakarta.month,
+        nowJakarta.day,
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+      final scheduledTime = scheduledInJakarta.toLocal();
+
+      if (scheduledTime.isAfter(DateTime.now())) {
         int notificationId = 1000000 + meal.id!;
         final mealName = meal.mealType?.name ?? 'Makan';
         final notes = meal.notes != null && meal.notes!.isNotEmpty ? ' - ${meal.notes}' : '';
