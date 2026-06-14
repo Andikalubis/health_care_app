@@ -193,12 +193,17 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               fontSize: 16,
               color: isUnread ? theme.colorScheme.primary : null,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.message != null)
-                Text(item.message!, style: const TextStyle(fontSize: 15)),
+                Text(item.message!,
+                  style: const TextStyle(fontSize: 15),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
               const SizedBox(height: 4),
               Text(
                 formatDateTimeShort(item.sendTime ?? item.createdAt),

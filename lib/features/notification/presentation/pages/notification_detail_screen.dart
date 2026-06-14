@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/notification/data/models/notification_model.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 
@@ -39,7 +40,7 @@ class NotificationDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Notifikasi')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Column(
           children: [
             CircleAvatar(
@@ -47,7 +48,7 @@ class NotificationDetailScreen extends StatelessWidget {
               backgroundColor: color.withValues(alpha: 0.1),
               child: Icon(
                 _typeIcon(notification.notificationType),
-                size: 48,
+                size: ResponsiveHelper.iconSize(context, 48),
                 color: color,
               ),
             ),
@@ -58,6 +59,7 @@ class NotificationDetailScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
             Container(
@@ -103,6 +105,7 @@ class NotificationDetailScreen extends StatelessWidget {
                     Text(
                       notification.message ?? 'Tidak ada pesan.',
                       style: const TextStyle(fontSize: 16, height: 1.5),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

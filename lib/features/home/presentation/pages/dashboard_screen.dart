@@ -49,22 +49,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (mounted) {
       _userName = prefs.getString('user_name') ?? 'Tamu';
       _userRole = prefs.getString('user_role') ?? 'user';
-      _lazyInitRealtime(prefs.getInt('user_id'), _userRole);
-      _loadDashboardData();
+      await _lazyInitRealtime(prefs.getInt('user_id'), _userRole);
+      await _loadDashboardData();
     }
   }
 
-  void _lazyInitRealtime(int? userId, String role) async {
+  Future<void> _lazyInitRealtime(int? userId, String role) async {
     if (_realtimeInitialized) return;
     _realtimeInitialized = true;
 
-    NotificationSchedulerService().scheduleTodayNotifications();
+    try {
+      await NotificationSchedulerService().scheduleTodayNotifications();
+    } catch (e) {
+      Log.error('Dashboard', 'Failed to schedule notifications: $e');
+    }
 
     final realtime = ReverbService();
     await realtime.init();
 
+    Future<void> refreshAndReschedule() async {
+      await _loadDashboardData();
+      try {
+        await NotificationSchedulerService().scheduleTodayNotifications();
+      } catch (e) {
+        Log.error('Dashboard', 'Failed to reschedule notifications: $e');
+      }
+    }
+
     if (userId != null && role != 'admin') {
-      // Subscribe to patient specific updates
       realtime.subscribePrivate('patient.$userId', 'vital.updated', (_) {
         Log.info('Dashboard', 'Vital updated, refreshing...');
         _loadDashboardData();
@@ -74,14 +86,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'medicine.schedule.updated',
         (_) {
           Log.info('Dashboard', 'Med schedule updated, refreshing...');
-          _loadDashboardData();
+          refreshAndReschedule();
         },
       );
       realtime.subscribePrivate('patient.$userId', 'meal.schedule.updated', (
         _,
       ) {
         Log.info('Dashboard', 'Meal schedule updated, refreshing...');
-        _loadDashboardData();
+        refreshAndReschedule();
       });
       realtime.subscribePrivate('patient.$userId', 'health.check.updated', (_) {
         Log.info('Dashboard', 'Health check updated, refreshing...');
@@ -94,10 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _loadDashboardData();
       });
 
-      // Subscribe to user notifications
       realtime.subscribePrivate('user.$userId', 'notification.created', (_) {
         Log.info('Dashboard', 'New notification received!');
-        _loadDashboardData(); // Refresh everything including unread count
+        _loadDashboardData();
       });
     }
 
@@ -132,38 +143,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboardData() async {
     _isLoading = true;
-    VitalSignModel? vital;
-    List<MedicineScheduleModel> meds = [];
-    List<MealScheduleModel> meals = [];
-    int unreadCount = 0;
 
-    try {
-      final results = await Future.wait([
-        _api.cachedGet('vital_signs', () => _api.getVitalSigns()),
-        _api.cachedGet('medicine_schedules', () => _api.getMedicineSchedules()),
-        _api.cachedGet('today_meals', () => _api.getTodayMeals()),
-        if (_userRole != 'admin')
-          _api.getUnreadNotificationCount(),
-      ]);
-      vital = (results[0] as List<VitalSignModel>).isNotEmpty
-          ? (results[0] as List<VitalSignModel>).first
-          : null;
-      meds = (results[1] as List<MedicineScheduleModel>).take(3).toList();
-      meals = (results[2] as List<MealScheduleModel>).take(3).toList();
-      if (_userRole != 'admin' && results.length > 3) {
-        unreadCount = results[3] as int;
-      }
-    } catch (_) {}
+    await Future.wait([
+      _loadVitalSigns(),
+      _loadMedicineSchedules(),
+      _loadMealSchedules(),
+      if (_userRole != 'admin') _loadUnreadCount(),
+    ]);
 
     if (mounted) {
-      setState(() {
-        _latestVital = vital;
-        _todayMeds = meds;
-        _todayMeals = meals;
-        _unreadCount = unreadCount;
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadVitalSigns() async {
+    try {
+      final vitals = await _api.cachedGet('vital_signs', () => _api.getVitalSigns());
+      if (mounted) {
+        setState(() {
+          _latestVital = vitals.isNotEmpty ? vitals.first : null;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadMedicineSchedules() async {
+    try {
+      final meds = await _api.cachedGet('medicine_schedules', () => _api.getMedicineSchedules());
+      if (mounted) {
+        setState(() => _todayMeds = meds.take(3).toList());
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadMealSchedules() async {
+    try {
+      final meals = await _api.cachedGet('today_meals', () => _api.getTodayMeals());
+      if (mounted) {
+        setState(() => _todayMeals = meals.take(3).toList());
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final count = await _api.getUnreadNotificationCount();
+      if (mounted) {
+        setState(() => _unreadCount = count);
+      }
+    } catch (_) {}
   }
 
   void _onItemTapped(int index) => setState(() => _selectedIndex = index);
@@ -550,6 +578,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             subtitle: Text(
               '${med.scheduleTimes?.map((t) => formatTime(t.drinkTime ?? '')).join(', ') ?? '-'}  •  ${med.dosage ?? '-'}',
               style: TextStyle(fontSize: ResponsiveHelper.fontSize(context, 15)),
+              overflow: TextOverflow.ellipsis,
             ),
             trailing: Icon(
               Icons.chevron_right,
@@ -621,6 +650,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             subtitle: Text(
               '${formatTime(meal.mealTime ?? '-')}${meal.notes != null && meal.notes!.isNotEmpty ? '  •  ${meal.notes}' : ''}',
               style: TextStyle(fontSize: ResponsiveHelper.fontSize(context, 15)),
+              overflow: TextOverflow.ellipsis,
             ),
             trailing: const Icon(Icons.chevron_right, color: Colors.orange),
             onTap: () => Navigator.push(

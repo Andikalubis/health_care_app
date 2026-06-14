@@ -35,10 +35,12 @@ mixin TelegramApi on BaseApi {
   }
 
   Future<Map<String, dynamic>> subscribeLinkByUsername(String username) async {
-    final res = await dio.post(
-      '/telegram/subscribe-link-by-username',
-      data: {'username': username},
-    );
-    return unwrap(res);
+    return safeApiCall(() async {
+      final res = await dio.post(
+        '/telegram/subscribe-link-by-username',
+        data: {'username': username},
+      );
+      return unwrap(res);
+    }, 'Gagal membuat link Telegram');
   }
 }

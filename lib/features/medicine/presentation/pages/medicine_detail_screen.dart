@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_model.dart';
 import 'package:health_care_app/features/medicine/presentation/pages/medicine_form_screen.dart';
 
@@ -28,7 +29,7 @@ class MedicineDetailScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Column(
           children: [
             CircleAvatar(
@@ -36,7 +37,7 @@ class MedicineDetailScreen extends StatelessWidget {
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               child: Icon(
                 Icons.medication,
-                size: 56,
+                size: ResponsiveHelper.iconSize(context, 56),
                 color: theme.colorScheme.primary,
               ),
             ),
@@ -47,6 +48,7 @@ class MedicineDetailScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 32),
             _buildInfoCard(theme),
@@ -96,7 +98,10 @@ class MedicineDetailScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        Text(value, style: const TextStyle(fontSize: 15)),
+        Text(value,
+          style: const TextStyle(fontSize: 15),
+          overflow: TextOverflow.ellipsis,
+        ),
       ],
     );
   }

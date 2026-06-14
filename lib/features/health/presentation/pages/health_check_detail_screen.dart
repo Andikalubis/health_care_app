@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/health/data/models/health_check_model.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 import 'add_health_check_screen.dart';
@@ -55,14 +56,14 @@ class HealthCheckDetailScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             CircleAvatar(
               radius: 48,
               backgroundColor: color.withValues(alpha: 0.1),
-              child: Icon(_statusIcon(check.status), size: 56, color: color),
+              child: Icon(_statusIcon(check.status), size: ResponsiveHelper.iconSize(context, 56), color: color),
             ),
             const SizedBox(height: 16),
             Text(
@@ -154,6 +155,7 @@ class HealthCheckDetailScreen extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

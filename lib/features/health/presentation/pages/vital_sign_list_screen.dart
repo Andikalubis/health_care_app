@@ -190,11 +190,14 @@ class _VitalSignListScreenState extends State<VitalSignListScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    formatDateTimeShort(item.checkTime ?? item.createdAt),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      formatDateTimeShort(item.checkTime ?? item.createdAt),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (_userRole != 'admin')

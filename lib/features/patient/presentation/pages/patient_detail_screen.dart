@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/patient/data/models/patient_data_model.dart';
 import 'package:health_care_app/features/patient/presentation/pages/medical_record_screen.dart';
 
@@ -13,7 +14,7 @@ class PatientDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Pasien')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -22,7 +23,7 @@ class PatientDetailScreen extends StatelessWidget {
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               child: Icon(
                 Icons.person,
-                size: 56,
+                size: ResponsiveHelper.iconSize(context, 56),
                 color: theme.colorScheme.primary,
               ),
             ),
@@ -32,6 +33,7 @@ class PatientDetailScreen extends StatelessWidget {
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
@@ -148,6 +150,7 @@ class PatientDetailScreen extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

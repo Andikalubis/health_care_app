@@ -13,34 +13,69 @@ class NotificationSchedulerService {
 
   Future<void> scheduleTodayNotifications() async {
     try {
-      Log.info('Notif', 'Fetching today doses...');
-      final doses = await _api.getTodayDoses();
+      await _scheduleMedicineNotifications();
+      await _scheduleMealNotifications();
+    } catch (e) {
+      Log.error('Notif', 'Error scheduling notifications: $e');
+    }
+  }
 
-      for (var dose in doses) {
-        final status = dose['status'];
-        if (status == 'pending') {
-          DateTime scheduledTime = DateTime.parse(dose['scheduled_for']);
-          if (scheduledTime.isAfter(DateTime.now())) {
-            int scheduleId = dose['schedule']['id'];
-            int timeId = dose['schedule_time']['id'];
-            int notificationId =
-                scheduleId * 1000 + timeId;
+  Future<void> _scheduleMedicineNotifications() async {
+    Log.info('Notif', 'Fetching today medicine doses...');
+    final doses = await _api.getTodayDoses();
 
-            Log.info('Notif', 'Scheduling ID $notificationId for ${dose['schedule']['medicine']['name']} at $scheduledTime');
+    for (var dose in doses) {
+      final status = dose['status'];
+      if (status == 'pending') {
+        DateTime scheduledTime = DateTime.parse(dose['scheduled_for']);
+        if (scheduledTime.isAfter(DateTime.now())) {
+          int scheduleId = dose['schedule']['id'];
+          int timeId = dose['schedule_time']['id'];
+          int notificationId = scheduleId * 1000 + timeId;
 
-            await _notificationService.scheduleNotification(
-              id: notificationId,
-              title: 'Waktunya Minum Obat!',
-              body:
-                  '${dose['schedule']['medicine']['name']} - ${dose['schedule']['dose_per_intake']} unit',
-              scheduledTime: scheduledTime,
-              payload: scheduleId.toString(),
-            );
-          }
+          Log.info('Notif', 'Scheduling medicine ID $notificationId for ${dose['schedule']['medicine']['name']} at $scheduledTime');
+
+          await _notificationService.scheduleNotification(
+            id: notificationId,
+            title: 'Waktunya Minum Obat!',
+            body: '${dose['schedule']['medicine']['name']} - ${dose['schedule']['dose_per_intake']} unit',
+            scheduledTime: scheduledTime,
+            payload: scheduleId.toString(),
+          );
         }
       }
-    } catch (e) {
-      Log.error('Notif', 'Error scheduling: $e');
+    }
+  }
+
+  Future<void> _scheduleMealNotifications() async {
+    Log.info('Notif', 'Fetching today meal schedules...');
+    final meals = await _api.getTodayMeals();
+
+    for (var meal in meals) {
+      if (meal.mealTime == null || meal.id == null) continue;
+
+      final now = DateTime.now();
+      final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final mealTimeStr = meal.mealTime!;
+      final scheduledTime = mealTimeStr.contains('T') || mealTimeStr.contains(' ')
+          ? DateTime.parse(mealTimeStr)
+          : DateTime.parse('$todayStr $mealTimeStr');
+
+      if (scheduledTime.isAfter(now)) {
+        int notificationId = 1000000 + meal.id!;
+        final mealName = meal.mealType?.name ?? 'Makan';
+        final notes = meal.notes != null && meal.notes!.isNotEmpty ? ' - ${meal.notes}' : '';
+
+        Log.info('Notif', 'Scheduling meal ID $notificationId for $mealName at $scheduledTime');
+
+        await _notificationService.scheduleNotification(
+          id: notificationId,
+          title: 'Waktunya Makan!',
+          body: '$mealName$notes',
+          scheduledTime: scheduledTime,
+          payload: meal.id.toString(),
+        );
+      }
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/health/data/models/vital_sign_model.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 
@@ -12,11 +13,11 @@ class VitalSignDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Tanda Vital')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.monitor_heart, size: 80, color: Colors.red),
+            Icon(Icons.monitor_heart, size: ResponsiveHelper.iconSize(context, 80), color: Colors.red),
             const SizedBox(height: 16),
             Text(
               'Pengukuran Tanda Vital',
@@ -113,6 +114,7 @@ class VitalSignDetailScreen extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: color,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

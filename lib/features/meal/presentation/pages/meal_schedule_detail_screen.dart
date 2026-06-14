@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/meal/data/models/meal_schedule_model.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 
@@ -13,15 +14,15 @@ class MealScheduleDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Jadwal Makan')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Column(
           children: [
             CircleAvatar(
               radius: 48,
               backgroundColor: Colors.orange.shade50,
-              child: const Icon(
+              child: Icon(
                 Icons.restaurant,
-                size: 56,
+                size: ResponsiveHelper.iconSize(context, 56),
                 color: Colors.orange,
               ),
             ),
@@ -32,6 +33,7 @@ class MealScheduleDetailScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
             if (schedule.mealTime != null)
               Container(
@@ -107,6 +109,7 @@ class MealScheduleDetailScreen extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

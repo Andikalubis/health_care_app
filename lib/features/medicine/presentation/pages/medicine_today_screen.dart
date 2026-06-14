@@ -39,7 +39,9 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
           _loading = false;
         });
         // Sync local notifications
-        NotificationSchedulerService().scheduleTodayNotifications();
+        try {
+          await NotificationSchedulerService().scheduleTodayNotifications();
+        } catch (_) {}
       }
     } catch (e) {
       if (mounted) {
@@ -196,19 +198,24 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(statusIcon, color: statusColor, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            statusText,
-                            style: TextStyle(
-                              color: statusColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                      Flexible(
+                        child: Row(
+                          children: [
+                            Icon(statusIcon, color: statusColor, size: 20),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                statusText,
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       Text(
                         formatTime(scheduleTime['drink_time']),
@@ -226,16 +233,19 @@ class _MedicineTodayScreenState extends State<MedicineTodayScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Dosis: ${schedule['dosage'] ?? '-'} (${schedule['dose_per_intake']} unit)',
                     style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Catatan: ${_getMealRelation(schedule['meal_relation'])}',
                     style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
+                    overflow: TextOverflow.ellipsis,
                   ),
 
                   if (status == 'pending' || status == 'late') ...[

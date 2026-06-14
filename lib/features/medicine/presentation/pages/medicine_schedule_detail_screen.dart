@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:health_care_app/core/utils/responsive_helper.dart';
 import 'package:health_care_app/features/medicine/data/models/medicine_schedule_model.dart';
 import 'package:health_care_app/core/utils/date_format_helper.dart';
 
@@ -20,13 +21,13 @@ class MedicineScheduleDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Jadwal Obat')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(ResponsiveHelper.contentPadding(context)),
         child: Column(
           children: [
             CircleAvatar(
               radius: 48,
               backgroundColor: Colors.blue.shade50,
-              child: const Icon(Icons.medication, size: 56, color: Colors.blue),
+              child: Icon(Icons.medication, size: ResponsiveHelper.iconSize(context, 56), color: Colors.blue),
             ),
             const SizedBox(height: 16),
             Text(
@@ -35,11 +36,13 @@ class MedicineScheduleDetailScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
             if (schedule.dosage != null)
               Text(
                 'Dosis Kandungan: ${schedule.dosage}',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                overflow: TextOverflow.ellipsis,
               ),
             const SizedBox(height: 32),
             Card(
@@ -159,6 +162,7 @@ class MedicineScheduleDetailScreen extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
